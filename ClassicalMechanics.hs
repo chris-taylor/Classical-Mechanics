@@ -6,7 +6,9 @@ import Control.Applicative
 import GHC.Exts (IsString (..))
 import Prelude hiding (Real,(^))
 
--- Pow type
+------------------------------
+-- Pow typeclass
+------------------------------
 
 class Num a => Pow a where
     (^) :: Integral b => a -> b -> a
@@ -20,7 +22,9 @@ instance Pow Double where
 instance Pow Expr where
     a ^ b = Pow a (fromIntegral b)
 
--- Symbol type
+------------------------------
+-- Symbolic expressions
+------------------------------
 
 data Expr = Var Var
           | Num Real
@@ -60,7 +64,9 @@ instance Fractional Expr where
 instance IsString Expr where
     fromString = Var
 
--- Simplification of algebraic expressions
+------------------------------
+-- Simplification of expressions
+------------------------------
 
 simplify :: Expr -> Expr
 simplify (Var v) = Var v
@@ -105,7 +111,9 @@ simplify (Pow e1 n) = case (simplify e1, n) of
     (Num a, n) -> Num (a ^ n)
     (a,n) -> Pow a n
 
--- Derivatives
+------------------------------
+-- Derivative of expressions
+------------------------------
 
 deriv :: Expr -> Expr -> Expr
 deriv (Var x) expr = simplify (go expr)
@@ -119,7 +127,9 @@ deriv (Var x) expr = simplify (go expr)
         go (Div a b) = ((b `Mul` go a) `Sub` (a `Mul` go b)) `Div` Pow b 2
         go (Pow a n) = Num (fromIntegral n) `Mul` Pow a (n-1)
 
+------------------------------
 -- Vector type
+------------------------------
 
 type Var  = String
 type Real = Float
@@ -139,7 +149,9 @@ instance Applicative Vector where
 dot :: Num a => Vector a -> Vector a -> a
 dot (V x y z) (V x' y' z') = x * x' + y * y' + z * z'
 
+------------------------------
 -- Useful synonyms
+------------------------------
 
 m, t, x, y, z, x', y', z' :: Expr
 m = "m"
@@ -151,29 +163,49 @@ x' = "x'"
 y' = "y'"
 z' = "z'"
 
-coord = Local (V x y z) (V x' y' z')
-
+------------------------------
 -- Local coordinates
+------------------------------
 
-data Local a = Local !(Vector a) !(Vector a) deriving (Eq,Show)
+data Local a = Local !a !(Vector a) !(Vector a) deriving (Eq,Show)
+
+time :: Local a -> a
+time (Local t _ _) = t
 
 position :: Local a -> Vector a
-position (Local pos _) = pos
+position (Local _ pos _) = pos
 
 velocity :: Local a -> Vector a
-velocity (Local _ vel) = vel
+velocity (Local _ _ vel) = vel
 
-up :: Applicative f => f (a -> b) -> a -> f b
-up fs t = ($t) <$> fs
+coord = Local t (V x y z) (V x' y' z')
 
+-- |Lift any functor of functions to a function that acts to produce a functor.
+up :: Functor f => f (a -> b) -> a -> f b
+up fs t = ($t) `fmap` fs
+
+-- |Coordinate function.
 q = up $ V (literalFunction x)
            (literalFunction y)
            (literalFunction z)
 
+-- |Create a literal symbolic function.
 literalFunction :: Expr -> Expr -> Expr
 literalFunction (Var f) x = App f x
 
+------------------------------
+-- Symbolic derivatives
+------------------------------
+
+d :: Functor f => (Expr -> f Expr) -> Expr -> f Expr
+d q = fmap (App "D") . q
+
+gamma :: (Expr -> Vector Expr) -> Expr -> Local Expr
+gamma q t = Local t (q t) (d q t)
+
+------------------------------
 -- Free particle
+------------------------------
 
 type Mass = Real
 
