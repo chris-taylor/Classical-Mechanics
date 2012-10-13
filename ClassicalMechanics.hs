@@ -137,7 +137,7 @@ type Real = Float
 data Vector a = V !a !a !a deriving (Eq)
 
 instance Show a => Show (Vector a) where
-    show (V x y z) = "(" ++ show x ++ "," ++ show y ++ "," ++ show z ++ ")"
+    show (V x y z) = "(" ++ show x ++ ", " ++ show y ++ ", " ++ show z ++ ")"
 
 instance Functor Vector where
     fmap f (V x y z) = V (f x) (f y) (f z)
