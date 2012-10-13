@@ -200,6 +200,10 @@ literalFunction (Var f) x = App f x
 d :: Functor f => (Expr -> f Expr) -> Expr -> f Expr
 d q = fmap (App "D") . q
 
+------------------------------
+-- Local coordinate function
+------------------------------
+
 gamma :: (Expr -> Vector Expr) -> Expr -> Local Expr
 gamma q t = Local t (q t) (d q t)
 
@@ -212,4 +216,14 @@ type Mass = Real
 lagrangianFreeParticle :: Fractional a => a -> Local a -> a
 lagrangianFreeParticle mass local = 0.5 * mass * (dot v v)
     where v = velocity local
+
+------------------------------
+-- Lagrangian action function
+------------------------------
+
+definiteIntegral :: Num a => (a -> a) -> a -> a -> a
+definiteIntegral = undefined
+
+lagrangianAction :: (Local Expr -> Expr) -> (Expr -> Vector Expr) -> Expr -> Expr -> Expr
+lagrangianAction l q t1 t2 = definiteIntegral (l . gamma q) t1 t2
 
