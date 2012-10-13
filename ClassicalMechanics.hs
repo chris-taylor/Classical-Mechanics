@@ -2,8 +2,9 @@
 
 module ClassicalMechanics where
 
-import Prelude hiding (Real,(^))
+import Control.Applicative
 import GHC.Exts (IsString (..))
+import Prelude hiding (Real,(^))
 
 -- Pow type
 
@@ -29,6 +30,7 @@ data Expr = Var Var
           | Mul Expr Expr
           | Div Expr Expr
           | Pow Expr Int
+          | App Var Expr
           deriving (Eq)
 
 instance Show Expr where
@@ -40,6 +42,7 @@ instance Show Expr where
     show (Mul a b) = "(" ++ show a ++ " * " ++ show b ++ ")"
     show (Div a b) = "(" ++ show a ++ " / " ++ show b ++ ")"
     show (Pow a b) = show a ++ "^" ++ show b
+    show (App f x) = f ++ " " ++ show x
 
 instance Num Expr where
     (+) = Add
@@ -121,14 +124,26 @@ deriv (Var x) expr = simplify (go expr)
 type Var  = String
 type Real = Float
 
-data Vector a = V !a !a !a deriving (Eq,Show)
+data Vector a = V !a !a !a deriving (Eq)
+
+instance Show a => Show (Vector a) where
+    show (V x y z) = "(" ++ show x ++ "," ++ show y ++ "," ++ show z ++ ")"
+
+instance Functor Vector where
+    fmap f (V x y z) = V (f x) (f y) (f z)
+
+instance Applicative Vector where
+    pure a = V a a a
+    V f g h <*> V x y z = V (f x) (g y) (h z)
 
 dot :: Num a => Vector a -> Vector a -> a
 dot (V x y z) (V x' y' z') = x * x' + y * y' + z * z'
 
 -- Useful synonyms
 
-x, y, z, x', y', z' :: Expr
+m, t, x, y, z, x', y', z' :: Expr
+m = "m"
+t = "t"
 x = "x"
 y = "y"
 z = "z"
@@ -148,11 +163,21 @@ position (Local pos _) = pos
 velocity :: Local a -> Vector a
 velocity (Local _ vel) = vel
 
+up :: Applicative f => f (a -> b) -> a -> f b
+up fs t = ($t) <$> fs
+
+q = up $ V (literalFunction x)
+           (literalFunction y)
+           (literalFunction z)
+
+literalFunction :: Expr -> Expr -> Expr
+literalFunction (Var f) x = App f x
+
 -- Free particle
 
 type Mass = Real
 
 lagrangianFreeParticle :: Fractional a => a -> Local a -> a
-lagrangianFreeParticle mass local = 0.5 * mass * (v `dot` v)
+lagrangianFreeParticle mass local = 0.5 * mass * (dot v v)
     where v = velocity local
 
