@@ -7,17 +7,21 @@ import Prelude hiding (Real,(^))
 
 import qualified Data.Map as Map
 
-------------------------------
--- Type Synonyms
-------------------------------
-
 type Var  = String
 type Real = Float
 
-------------------------------
--- Pow typeclass
-------------------------------
-
+-- |Class for types which can be raised to integer powers. The reason for
+--introducing this class is that the (^) function in the Prelude is implemented
+--as iterated multiplication, meaning that an 'Expr' raised to a power would
+--give the following result
+--
+--    ghci> x ^ 8
+--    (((x * x) * (x * x)) * ((x * x) * (x * x)))
+--
+--rather than the more appealing and readable
+--
+--    ghci> x ^ 8
+--    x^8
 class Num a => Pow a where
     (^) :: Integral b => a -> b -> a
 
@@ -30,10 +34,18 @@ instance Pow Double where
 instance Pow Expr where
     a ^ b = Pow a (fromIntegral b)
 
-------------------------------
--- Symbolic expressions
-------------------------------
-
+-- |Symbolic expression data type. This type is the foundation for all symbolic
+--manipulation in the package. Note that there are two versions of function
+--application. The constructor 'Lit' is for functions that carry no information
+--other than their name. The constructor 'App' is for Haskell functions of type
+-- @Floating a => a -> a@, i.e. functions of real numbers. As well as the name
+--of the function we also carry around its Haskell representation, so that the
+--expression can be evaluated later.
+--
+--The alternative would be to just carry around the name of the function, and
+--when we evaluate an expression also pass in a function environment, which
+--provides a means to look up which function should be applied. I may modify
+--the representation to do that at a later date if it seems sensible.
 data Expr = Var Var
           | Num Real
           | Neg Expr
@@ -57,15 +69,22 @@ instance Show Expr where
     show (Lit f x) = f ++ " " ++ show x
     show (App f _ x) = f ++ "(" ++ show x ++ ")"
 
+--Minimal 'Eq' instance (we can't derive it since there is no derivable 'Eq'
+--instance for @Real -> Real@).
 instance Eq Expr where
     Var a == Var b = a == b
     Num a == Num b = a == b
     _     == _     = False
 
+--The 'Ord' instance is necessary to do definite integrals, where the limits
+--can be supplied as numbers or as expressions representing numbers.
 instance Ord Expr where
     compare (Num a) (Num b) = compare a b
     compare  expr1   expr2  = compare (simplify expr1) (simplify expr2)
 
+--Since we are only concerned with smooth functions, I don't bother to give a
+--representation for the 'abs' and 'signum' functions. Using them will cause
+--the program to crash. I should probably hide them from user-facing code.
 instance Num Expr where
     (+) = Add
     (-) = Sub
@@ -100,10 +119,9 @@ instance Floating Expr where
 instance IsString Expr where
     fromString = Var
 
-------------------------------
--- Expression Utils
-------------------------------
-
+-- |Literal expressions (numbers and variables) don't need to be surrounded by
+--parentheses when we print them, so we provide a convenience function that
+--identifies those special cases.
 isLiteral :: Expr -> Bool
 isLiteral expr = case expr of
     Var _ -> True
@@ -200,7 +218,7 @@ deriv (Var x) expr = simplify (go expr)
             "cos" -> go e `Mul` Neg (App "sin" sin e)
 
 ------------------------------
--- Useful synonyms
+-- Useful named variables
 ------------------------------
 
 m, t, x, y, z, x', y', z' :: Expr
