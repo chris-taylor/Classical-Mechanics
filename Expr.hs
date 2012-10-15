@@ -8,7 +8,7 @@ import Prelude hiding (Real,(^))
 import qualified Data.Map as Map
 
 type Var  = String
-type Real = Float
+type Real = Double
 
 -- |Class for types which can be raised to integer powers. The reason for
 --introducing this class is that the (^) function in the Prelude is implemented

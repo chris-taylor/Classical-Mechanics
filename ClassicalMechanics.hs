@@ -154,7 +154,12 @@ class Fractional a => Differentiable a where
     d :: Applicative f => (a -> f a) -> a -> f a
 
 instance Differentiable Float where
-    d f x = (/(2*dx)) <$> (liftA2 (-) (f (x+dx)) (f (x-dx)))
+    d f x = fmap (/(2*dx)) $ (liftA2 (-) (f (x+dx)) (f (x-dx)))
+        where
+            dx  = 1e-4
+
+instance Differentiable Double where
+    d f x = fmap (/(2*dx)) $ (liftA2 (-) (f (x+dx)) (f (x-dx)))
         where
             dx  = 1e-8
 
