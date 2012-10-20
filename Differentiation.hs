@@ -76,7 +76,7 @@ instance Num a => Num (Dif a) where
 
 instance Fractional a => Fractional (Dif a) where
     fromRational = dConst . fromRational
-    recip        = dlift recip (sqr recip)
+    recip        = recip >-< -(sqr recip)
 
 instance Floating a => Floating (Dif a) where
     pi    = dConst pi
