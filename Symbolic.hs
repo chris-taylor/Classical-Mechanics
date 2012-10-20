@@ -1,3 +1,5 @@
+{-# LANGUAGE ViewPatterns #-}
+
 -- |Classes for symbolic algebra. This is a simplified version of the symbolic
 --algebra code in Algebra.HaskSymb, available on github at
 --https://github.com/colah/HaskSymb/
@@ -92,4 +94,29 @@ prodC' vals =
                         (l, n) -> prodC $ (constC n) : l
 
             else prodC' $ nonProds ++ concatMap (Maybe.fromJust . prodD) prods
+
+-- |Equality between two lists, ignoring ordering. This is O(n^2) in the length
+--of the list.
+listEq :: (a -> a -> Bool) -> [a] -> [a] -> Bool
+listEq eqfn (a:as) bs =
+    let matches    = filter (`eqfn` a) bs
+        nonmatches = filter (not . (`eqfn` a)) bs
+
+    in  if null matches
+            then False
+            else listEq eqfn as (tail matches ++ nonmatches)
+
+listEq _ [] [] = True
+listEq _  _  _ = False
+
+-- |Equality for symbolic expressions.
+(===) :: (Symbolic a, SymbolicSum a, SymbolicProd a) => a -> a -> Bool
+(constD -> Just a) === (constD -> Just b) = a == b
+(varD   -> Just a) === (varD   -> Just b) = a == b
+(sumD   -> Just a) === (sumD   -> Just b) = listEq (===) a b
+(prodD  -> Just a) === (prodD  -> Just b) = listEq (===) a b
+_                  === _                  = False
+
+
+
 
