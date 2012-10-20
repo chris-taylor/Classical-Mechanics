@@ -17,7 +17,8 @@ instance Num b => Num (a -> b) where
 
 instance Fractional b => Fractional (a -> b) where
     fromRational = pure . fromRational
-    (/) = liftA2 (/)
+    (/)   = liftA2 (/)
+    recip = fmap recip
 
 instance Floating b => Floating (a -> b) where
     pi    = pure pi
