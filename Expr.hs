@@ -134,6 +134,9 @@ isLiteral expr = case expr of
 
 type Environment = Map.Map Var Expr
 
+empty :: Environment
+empty = Map.empty
+
 eval :: Environment -> Expr -> Real
 eval env (Num n) = n
 eval env (Var v) = eval env (env Map.! v)
@@ -174,6 +177,8 @@ simplify (Mul e1 e2) = case (simplify e1, simplify e2) of
     (_, Num 0) -> Num 0
     (Num 1, a) -> a
     (a, Num 1) -> a
+    (Num (-1), a) -> Neg a
+    (a, Num (-1)) -> Neg a
     (Num a, Num b) -> Num (a * b)
     (a,b) -> Mul a b
 
