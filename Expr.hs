@@ -48,7 +48,6 @@ instance Pow Expr where
 --the representation to do that at a later date if it seems sensible.
 data Expr = Var Var
           | Num Real
-          | Neg Expr
           | Add Expr Expr
           | Sub Expr Expr
           | Mul Expr Expr
@@ -60,7 +59,6 @@ data Expr = Var Var
 instance Show Expr where
     show (Var v) = v
     show (Num n) = show n
-    show (Neg a) = "-" ++ show a
     show (Add a b) = "(" ++ show a ++ " + " ++ show b ++ ")"
     show (Sub a b) = "(" ++ show a ++ " - " ++ show b ++ ")"
     show (Mul a b) = "(" ++ show a ++ " * " ++ show b ++ ")"
@@ -89,7 +87,6 @@ instance Num Expr where
     (+) = Add
     (-) = Sub
     (*) = Mul
-    negate   = Neg
     signum _ = undefined
     abs    _ = undefined
     fromInteger = Num . fromInteger
@@ -140,7 +137,6 @@ empty = Map.empty
 eval :: Environment -> Expr -> Real
 eval env (Num n) = n
 eval env (Var v) = eval env (env Map.! v)
-eval env (Neg a) = negate (eval env a)
 eval env (Add a b) = eval env a + eval env b
 eval env (Sub a b) = eval env a - eval env b
 eval env (Mul a b) = eval env a * eval env b
@@ -156,10 +152,6 @@ simplify :: Expr -> Expr
 simplify (Var v) = Var v
 simplify (Num n) = Num n
 
-simplify (Neg e) = case simplify e of
-    Neg a -> simplify a
-    other -> Neg other
-
 simplify (Add e1 e2) = case (simplify e1, simplify e2) of
     (Num 0, a) -> a
     (a, Num 0) -> a
@@ -167,7 +159,7 @@ simplify (Add e1 e2) = case (simplify e1, simplify e2) of
     (a,b) -> Add a b
 
 simplify (Sub e1 e2) = case (simplify e1, simplify e2) of
-    (Num 0, a) -> Neg a
+    (Num 0, a) -> Mul (Num (-1)) a
     (a, Num 0) -> a
     (Num a, Num b) -> Num (a - b)
     (a,b) -> Sub a b
@@ -177,8 +169,12 @@ simplify (Mul e1 e2) = case (simplify e1, simplify e2) of
     (_, Num 0) -> Num 0
     (Num 1, a) -> a
     (a, Num 1) -> a
-    (Num (-1), a) -> Neg a
-    (a, Num (-1)) -> Neg a
+    --(Num (-1), a) -> case a of
+    --    Num n -> Num (-n)
+    --    a     -> negate a
+    --(a, Num (-1)) -> case a of
+    --    Num n -> Num (-n)
+    --    a     -> negate a
     (Num a, Num b) -> Num (a * b)
     (a,b) -> Mul a b
 
@@ -197,30 +193,29 @@ simplify (Pow e1 n) = case (simplify e1, n) of
     (Num a, n) -> Num (a ^ n)
     (a,n) -> Pow a n
 
-simplify (Lit f e) = Lit f (simplify e)
+simplify (Lit f e)   = Lit f (simplify e)
 simplify (App f g e) = App f g (simplify e)
 
 ------------------------------
 -- Derivative of expressions
 ------------------------------
 
-deriv :: Expr -> Expr -> Expr
-deriv (Var x) expr = simplify (go expr)
-    where
-        go (Num _) = Num 0
-        go (Var y) = if x == y then Num 1 else Num 0
-        go (Neg a) = Neg (go a)
-        go (Add a b) = go a `Add` go b
-        go (Sub a b) = go a `Sub` go b
-        go (Mul a b) = (a `Mul` go b) `Add` (go a `Mul` b)
-        go (Div a b) = ((b `Mul` go a) `Sub` (a `Mul` go b)) `Div` Pow b 2
-        go (Pow a n) = Num (fromIntegral n) `Mul` Pow a (n-1)
+--deriv :: Expr -> Expr -> Expr
+--deriv (Var x) expr = simplify (go expr)
+--    where
+--        go (Num _) = Num 0
+--        go (Var y) = if x == y then Num 1 else Num 0
+--        go (Add a b) = go a `Add` go b
+--        go (Sub a b) = go a `Sub` go b
+--        go (Mul a b) = (a `Mul` go b) `Add` (go a `Mul` b)
+--        go (Div a b) = ((b `Mul` go a) `Sub` (a `Mul` go b)) `Div` Pow b 2
+--        go (Pow a n) = Num (fromIntegral n) `Mul` Pow a (n-1)
 
-        go (App f g e) = case f of
-            "exp" -> go e `Mul` App "exp" exp e
-            "log" -> go e `Mul` Div 1 e
-            "sin" -> go e `Mul` App "cos" cos e
-            "cos" -> go e `Mul` Neg (App "sin" sin e)
+--        go (App f g e) = case f of
+--            "exp" -> go e `Mul` App "exp" exp e
+--            "log" -> go e `Mul` Div 1 e
+--            "sin" -> go e `Mul` App "cos" cos e
+--            "cos" -> go e `Mul` negate (App "sin" sin e)
 
 ------------------------------
 -- Useful named variables
