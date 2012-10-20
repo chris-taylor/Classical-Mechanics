@@ -2,37 +2,12 @@
 
 module Expr where
 
-import GHC.Exts (IsString (..))
-import Prelude hiding (Real,(^))
+import           GHC.Exts (IsString (..))
+import           Prelude hiding (Real,(^))
+import qualified Data.Map  as Map
+import qualified Data.List as List
 
-import qualified Data.Map as Map
-
-type Var  = String
-type Real = Double
-
--- |Class for types which can be raised to integer powers. The reason for
---introducing this class is that the (^) function in the Prelude is implemented
---as iterated multiplication, meaning that an 'Expr' raised to a power would
---give the following result
---
---    ghci> x ^ 8
---    (((x * x) * (x * x)) * ((x * x) * (x * x)))
---
---rather than the more appealing and readable
---
---    ghci> x ^ 8
---    x^8
-class Num a => Pow a where
-    (^) :: Integral b => a -> b -> a
-
-instance Pow Float where
-    a ^ b = a Prelude.^^ b
-
-instance Pow Double where
-    a ^ b = a Prelude.^^ b
-
-instance Pow Expr where
-    a ^ b = Pow a (fromIntegral b)
+import Symbolic
 
 -- |Symbolic expression data type. This type is the foundation for all symbolic
 --manipulation in the package. Note that there are two versions of function
@@ -48,153 +23,244 @@ instance Pow Expr where
 --the representation to do that at a later date if it seems sensible.
 data Expr = Var Var
           | Num Real
-          | Add Expr Expr
-          | Sub Expr Expr
-          | Mul Expr Expr
-          | Div Expr Expr
-          | Pow Expr Int
-          | Lit Var Expr                   -- literal function application
-          | App Var (Real -> Real) Expr    -- function application with lookup
+          | Sum  [Expr]
+          | Prod [Expr]
+          | Sin Expr
+          | Cos Expr
 
+-- |Utility function to collect all identical elements, and return
+--them together with a list giving their positions in the original list.
+--For example,
+--
+--  >>> collectCopies "ababa"
+--  [('a',[0,2,4]),('b',[1,3])]
+--
+--This is particularly useful for grouping algebraic expresions to be printed.
+collectCopies :: (Eq a) => [a] -> [(a, [Int])]
+collectCopies vars = map (\v -> (v, positions 0 v vars)) $ List.nub vars
+    where
+        positions :: Eq a => Int -> a -> [a] -> [Int]
+        positions _     _     []     = []
+        positions shift match (x:xs) =
+            if x == match
+                then shift : positions (shift + 1) match xs
+                else positions (shift + 1) match xs
+
+-- |Show instance for expressions. This is lifted from Algebra.HaskSymb.
 instance Show Expr where
-    show (Var v) = v
-    show (Num n) = show n
-    show (Add a b) = "(" ++ show a ++ " + " ++ show b ++ ")"
-    show (Sub a b) = "(" ++ show a ++ " - " ++ show b ++ ")"
-    show (Mul a b) = "(" ++ show a ++ " * " ++ show b ++ ")"
-    show (Div a b) = "(" ++ show a ++ " / " ++ show b ++ ")"
-    show (Pow a b) = show a ++ "^" ++ show b
-    show (Lit f x) = f ++ " " ++ show x
-    show (App f _ x) = f ++ "(" ++ show x ++ ")"
+    show = shw 0
+        where
+            shw :: Int -> Expr -> String
+            shw _ (Sum  []) = "0"
+            shw _ (Prod []) = "1"
 
---Minimal 'Eq' instance (we can't derive it since there is no derivable 'Eq'
---instance for @Real -> Real@).
+            shw n (Sin val) = "sin(" ++ shw n val ++ ")"
+            shw n (Cos val) = "cos(" ++ shw n val ++ ")"
+
+            shw 0 (Sum vals) =
+                concat $ List.intersperse " + " $ map (shw 0) $
+                                                reverse $ List.sortBy cmp vals
+                where
+                    Prod a `cmp` Prod b = length a `compare` length b
+                    _      `cmp` Prod _ = LT
+                    Prod _ `cmp` _      = GT
+                    _      `cmp` _      = EQ
+
+            shw 0 a = shw 1 a
+
+            shw 1 (Prod vals) =
+                pre ++ (concat $ List.intersperse "*" $
+                    map (showWithPow . lengthifySecond) $ collectCopies nonConsts)
+
+                where
+                    isConst (Num a) = True
+                    isConst _       = False
+
+                    consts    = map (\(Num n) -> n) $ filter isConst vals
+                    nonConsts = filter (not . isConst) vals
+
+                    pre = if null consts || product consts == 1
+                            then ""
+                            else show (product consts)
+
+                    lengthifySecond (a,b) = (a,length b)
+
+                    showWithPow (a,n) = shw 1 a ++ (case n of
+                                                        1 -> ""
+                                                        2 -> "²"
+                                                        3 -> "³"
+                                                        4 -> "⁴"
+                                                        5 -> "⁵"
+                                                        6 -> "⁶"
+                                                        7 -> "⁷"
+                                                        8 -> "⁸"
+                                                        9 -> "⁹"
+                                                        n -> "^" ++ show n)
+
+            shw 1 (Num a) = show a
+            shw 1 (Var s) = s
+            shw 1 a       = "(" ++ shw 0 a ++ ")"
+
 instance Eq Expr where
-    Var a == Var b = a == b
-    Num a == Num b = a == b
-    _     == _     = False
+    a == b = a === b
 
---The 'Ord' instance is necessary to do definite integrals, where the limits
---can be supplied as numbers or as expressions representing numbers.
-instance Ord Expr where
-    compare (Num a) (Num b) = compare a b
-    compare  expr1   expr2  = compare (simplify expr1) (simplify expr2)
+instance Symbolic Expr where
+    constC         = Num
+    constD (Num n) = Just n
+    constD _       = Nothing
 
---Since we are only concerned with smooth functions, I don't bother to give a
---representation for the 'abs' and 'signum' functions. Using them will cause
---the program to crash. I should probably hide them from user-facing code.
+    varC         = Var
+    varD (Var s) = Just s
+    varD _       = Nothing
+
+instance SymbolicSum Expr where
+    sumC         = Sum
+    sumD (Sum l) = Just l
+    sumD _       = Nothing
+
+instance SymbolicProd Expr where
+    prodC          = Prod
+    prodD (Prod l) = Just l
+    prodD _        = Nothing
+
 instance Num Expr where
-    (+) = Add
-    (-) = Sub
-    (*) = Mul
-    signum _ = undefined
-    abs    _ = undefined
     fromInteger = Num . fromInteger
+    a + b = sumC'  [a,b]
+    a * b = prodC' [a,b]
+    negate = ((-1)*)
 
-instance Fractional Expr where
-    (/) = Div
-    fromRational = Num . fromRational
+    abs    _ = undefined
+    signum _ = undefined
 
-instance Floating Expr where
-    pi   = Num pi
-    exp  = App "exp" exp
-    log  = App "log" log
-    sqrt = App "sqrt" sqrt
-    cos  = App "cos" cos
-    sin  = App "sin" sin
-    tan  = App "tan" tan
-    acos = App "acos" acos
-    asin = App "asin" asin
-    atan = App "atan" atan
-    sinh = App "sinh" sinh
-    cosh = App "cosh" cosh
-    tanh = App "tanh" tanh
-    acosh = App "acosh" acosh
-    asinh = App "asinh" asinh
-    atanh = App "atanh" atanh
+
+----Minimal 'Eq' instance (we can't derive it since there is no derivable 'Eq'
+----instance for @Real -> Real@).
+--instance Eq Expr where
+--    Var a == Var b = a == b
+--    Num a == Num b = a == b
+--    _     == _     = False
+
+----The 'Ord' instance is necessary to do definite integrals, where the limits
+----can be supplied as numbers or as expressions representing numbers.
+--instance Ord Expr where
+--    compare (Num a) (Num b) = compare a b
+--    compare  expr1   expr2  = compare (simplify expr1) (simplify expr2)
+
+----Since we are only concerned with smooth functions, I don't bother to give a
+----representation for the 'abs' and 'signum' functions. Using them will cause
+----the program to crash. I should probably hide them from user-facing code.
+--instance Num Expr where
+--    (+) = Add
+--    (-) = Sub
+--    (*) = Mul
+--    signum _ = undefined
+--    abs    _ = undefined
+--    fromInteger = Num . fromInteger
+
+--instance Fractional Expr where
+--    (/) = Div
+--    fromRational = Num . fromRational
+
+--instance Floating Expr where
+--    pi   = Num pi
+--    exp  = App "exp" exp
+--    log  = App "log" log
+--    sqrt = App "sqrt" sqrt
+--    cos  = App "cos" cos
+--    sin  = App "sin" sin
+--    tan  = App "tan" tan
+--    acos = App "acos" acos
+--    asin = App "asin" asin
+--    atan = App "atan" atan
+--    sinh = App "sinh" sinh
+--    cosh = App "cosh" cosh
+--    tanh = App "tanh" tanh
+--    acosh = App "acosh" acosh
+--    asinh = App "asinh" asinh
+--    atanh = App "atanh" atanh
 
 instance IsString Expr where
     fromString = Var
 
--- |Literal expressions (numbers and variables) don't need to be surrounded by
---parentheses when we print them, so we provide a convenience function that
---identifies those special cases.
-isLiteral :: Expr -> Bool
-isLiteral expr = case expr of
-    Var _ -> True
-    Num _ -> True
-    _     -> False
+---- |Literal expressions (numbers and variables) don't need to be surrounded by
+----parentheses when we print them, so we provide a convenience function that
+----identifies those special cases.
+--isLiteral :: Expr -> Bool
+--isLiteral expr = case expr of
+--    Var _ -> True
+--    Num _ -> True
+--    _     -> False
 
-------------------------------
--- Evaluate expressions
-------------------------------
+--------------------------------
+---- Evaluate expressions
+--------------------------------
 
-type Environment = Map.Map Var Expr
+--type Environment = Map.Map Var Expr
 
-empty :: Environment
-empty = Map.empty
+--empty :: Environment
+--empty = Map.empty
 
-eval :: Environment -> Expr -> Real
-eval env (Num n) = n
-eval env (Var v) = eval env (env Map.! v)
-eval env (Add a b) = eval env a + eval env b
-eval env (Sub a b) = eval env a - eval env b
-eval env (Mul a b) = eval env a * eval env b
-eval env (Div a b) = eval env a / eval env b
-eval env (Pow a n) = eval env a ^^ n
-eval env (App _ f a) = f (eval env a)
+--eval :: Environment -> Expr -> Real
+--eval env (Num n) = n
+--eval env (Var v) = eval env (env Map.! v)
+--eval env (Add a b) = eval env a + eval env b
+--eval env (Sub a b) = eval env a - eval env b
+--eval env (Mul a b) = eval env a * eval env b
+--eval env (Div a b) = eval env a / eval env b
+--eval env (Pow a n) = eval env a ^^ n
+--eval env (App _ f a) = f (eval env a)
 
-------------------------------
--- Simplification of expressions
-------------------------------
+--------------------------------
+---- Simplification of expressions
+--------------------------------
 
-simplify :: Expr -> Expr
-simplify (Var v) = Var v
-simplify (Num n) = Num n
+--simplify :: Expr -> Expr
+--simplify (Var v) = Var v
+--simplify (Num n) = Num n
 
-simplify (Add e1 e2) = case (simplify e1, simplify e2) of
-    (Num 0, a) -> a
-    (a, Num 0) -> a
-    (Num a, Num b) -> Num (a + b)
-    (a,b) -> Add a b
+--simplify (Add e1 e2) = case (simplify e1, simplify e2) of
+--    (Num 0, a) -> a
+--    (a, Num 0) -> a
+--    (Num a, Num b) -> Num (a + b)
+--    (a,b) -> Add a b
 
-simplify (Sub e1 e2) = case (simplify e1, simplify e2) of
-    (Num 0, a) -> Mul (Num (-1)) a
-    (a, Num 0) -> a
-    (Num a, Num b) -> Num (a - b)
-    (a,b) -> Sub a b
+--simplify (Sub e1 e2) = case (simplify e1, simplify e2) of
+--    (Num 0, a) -> Mul (Num (-1)) a
+--    (a, Num 0) -> a
+--    (Num a, Num b) -> Num (a - b)
+--    (a,b) -> Sub a b
 
-simplify (Mul e1 e2) = case (simplify e1, simplify e2) of
-    (Num 0, _) -> Num 0
-    (_, Num 0) -> Num 0
-    (Num 1, a) -> a
-    (a, Num 1) -> a
-    --(Num (-1), a) -> case a of
-    --    Num n -> Num (-n)
-    --    a     -> negate a
-    --(a, Num (-1)) -> case a of
-    --    Num n -> Num (-n)
-    --    a     -> negate a
-    (Num a, Num b) -> Num (a * b)
-    (a,b) -> Mul a b
+--simplify (Mul e1 e2) = case (simplify e1, simplify e2) of
+--    (Num 0, _) -> Num 0
+--    (_, Num 0) -> Num 0
+--    (Num 1, a) -> a
+--    (a, Num 1) -> a
+--    --(Num (-1), a) -> case a of
+--    --    Num n -> Num (-n)
+--    --    a     -> negate a
+--    --(a, Num (-1)) -> case a of
+--    --    Num n -> Num (-n)
+--    --    a     -> negate a
+--    (Num a, Num b) -> Num (a * b)
+--    (a,b) -> Mul a b
 
-simplify (Div e1 e2) = case (simplify e1, simplify e2) of
-    (Num 0, _) -> Num 0
-    (_, Num 0) -> error "Division by zero!"
-    (a, Num 1) -> a
-    (Num a, Num b) -> Num (a / b)
-    (a,b) -> Div a b
+--simplify (Div e1 e2) = case (simplify e1, simplify e2) of
+--    (Num 0, _) -> Num 0
+--    (_, Num 0) -> error "Division by zero!"
+--    (a, Num 1) -> a
+--    (Num a, Num b) -> Num (a / b)
+--    (a,b) -> Div a b
 
-simplify (Pow e1 n) = case (simplify e1, n) of
-    (_, 0) -> Num 1
-    (a, 1) -> a
-    (Num 0, _) -> Num 0
-    (Num 1, _) -> Num 1
-    (Num a, n) -> Num (a ^ n)
-    (a,n) -> Pow a n
+--simplify (Pow e1 n) = case (simplify e1, n) of
+--    (_, 0) -> Num 1
+--    (a, 1) -> a
+--    (Num 0, _) -> Num 0
+--    (Num 1, _) -> Num 1
+--    (Num a, n) -> Num (a ^ n)
+--    (a,n) -> Pow a n
 
-simplify (Lit f e)   = Lit f (simplify e)
-simplify (App f g e) = App f g (simplify e)
+--simplify (Lit f e)   = Lit f (simplify e)
+--simplify (App f g e) = App f g (simplify e)
 
 ------------------------------
 -- Derivative of expressions
