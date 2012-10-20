@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 module Differentiation where
 
 import Control.Applicative
@@ -37,38 +39,61 @@ instance Floating b => Floating (a -> b) where
     atanh = liftA atanh
 
 ------------------------------
+-- Numeric Maybe
+------------------------------
+
+infixl 6 +.
+(+.) :: Num a => Maybe a -> Maybe a -> Maybe a
+Nothing +. b'      = b'
+a'      +. Nothing = a'
+Just a' +. Just b' = Just (a' + b')
+
+infixl 6 -.
+(-.) :: Num a => Maybe a -> Maybe a -> Maybe a
+Nothing -. b'      = fmap negate b'
+a'      -. Nothing = a'
+Just a' -. Just b' = Just (a' - b')
+
+infixl 7 .*
+(.*) :: Num a => Maybe a -> a -> Maybe a
+Nothing .* _ = Nothing
+Just a' .* b =  Just (a' * b)
+
+infixl 7 *.
+(*.) :: Num a => a -> Maybe a -> Maybe a
+_ *. Nothing = Nothing
+a *. Just b' = Just (a * b')
+
+------------------------------
 -- Automatic differentiation
 ------------------------------
 
-data Dif a = D a (Dif a) deriving (Show)
+data Dif a = D a (Maybe (Dif a)) deriving (Show)
 
 dConst :: Num a => a -> Dif a
-dConst x = D x dZero
-
-dZero :: Num a => Dif a
-dZero = D 0 dZero
+dConst x = D x Nothing
 
 dVar :: Num a => a -> Dif a
-dVar x = D x (dConst 1)
+dVar x = D x (Just (dConst 1))
 
-dlift :: Num a => (a -> a) -> (Dif a -> Dif a) -> Dif a -> Dif a
-dlift f f' = \ u@(D u0 u') -> D (f u0) (f' u * u')
+dlift :: Num (Dif a) => (a -> a) -> (Dif a -> Dif a) -> Dif a -> Dif a
+dlift f f' = \ u@(D u0 u') -> D (f u0) (u' .* f' u)
 
 infix 0 >-<
-(>-<) :: Num a => (a -> a) -> (Dif a -> Dif a) -> Dif a -> Dif a
+(>-<) :: Num (Dif a) => (a -> a) -> (Dif a -> Dif a) -> Dif a -> Dif a
 (>-<) = dlift
 
 sqr :: Num a => a -> a
 sqr x = x * x
 
 instance Functor Dif where
-    fmap f (D a b) = D (f a) (fmap f b)
+    fmap f (D a b) = D (f a) ((fmap.fmap) f b)
 
 instance Num a => Num (Dif a) where
     fromInteger               = dConst . fromInteger
-    D x0 x' + D y0 y'         = D (x0 + y0) (x' + y')
-    D x0 x' - D y0 y'         = D (x0 - y0) (x' - y')
-    x@(D x0 x') * y@(D y0 y') = D (x0 * y0) (x' * y + x * y')
+    D x0 x' + D y0 y'         = D (x0 + y0) (x' +. y')
+    D x0 x' - D y0 y'         = D (x0 - y0) (x' -. y')
+    x@(D x0 x') * y@(D y0 y') = D (x0 * y0) (x' .* y +. x *. y')
 
     negate = negate >-< (-1)
     abs    = abs    >-< signum
@@ -95,5 +120,7 @@ instance Floating a => Floating (Dif a) where
     atanh = atanh >-< recip (1-sqr)
 
 dTake :: Int -> Dif a -> [a]
-dTake 0 _         = []
-dTake n (D a dif) = a : dTake (n-1) dif
+dTake 0 _               = []
+dTake n (D a Nothing)   = return a
+dTake n (D a (Just a')) = a : dTake (n-1) a'
+
