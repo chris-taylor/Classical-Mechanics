@@ -47,65 +47,75 @@ collectCopies vars = map (\v -> (v, positions 0 v vars)) $ List.nub vars
                 then shift : positions (shift + 1) match xs
                 else positions (shift + 1) match xs
 
--- |Show instance for expressions. This is lifted from Algebra.HaskSymb.
 instance Show Expr where
-    show = shw 0
-        where
-            shw :: Int -> Expr -> String
-            shw _ (Sum  []) = "EMPTYPRODUCT"
-            shw _ (Prod []) = "EMPTYSUM"
+    show = shw1
 
-            shw n (App f _ val) = f ++ "(" ++ shw n val ++ ")"
+-- |Simple show instance (useful for debugging)
+shw1 :: Expr -> String
+shw1 (Var s)     = s
+shw1 (Num x)     = show x
+shw1 (Sum as)    = "Sum" ++ show as
+shw1 (Prod as)   = "Prd" ++ show as
+shw1 (Div a b)   = "Div" ++ shw1 a ++ " " ++ shw1 b
+shw1 (App s _ a) = s ++ "(" ++ shw1 a ++ ")"
 
-            shw 0 (Div a b)  = case (constD a, constD b) of
-                (Just x, Just y) -> show (x/y)
-                (_, _)           -> shw 1 a ++ " / " ++ shw 1 b
+-- |Helper function for the 'Show' instance of 'Expr'. This is lifted, with
+--modifications, from Algebra.HaskSymb.
+shw :: Int -> Expr -> String
+shw _ (Sum  []) = "EMPTYPRODUCT"
+shw _ (Prod []) = "EMPTYSUM"
 
-            shw 0 (Sum vals) =
-                concat $ List.intersperse " + " $ map show $ List.sortBy cmp vals
-                where
-                    Prod a `cmp` Prod b = length b `compare` length a
-                    _      `cmp` Prod _ = GT
-                    Prod _ `cmp` _      = LT
-                    _      `cmp` _      = EQ
+shw n (App f _ val) = f ++ "(" ++ shw n val ++ ")"
 
-            shw 0 a = shw 1 a
+shw 0 (Div a b)  = case (constD a, constD b) of
+    (Just x, Just y) -> show (x/y)
+    (_, _)           -> shw 1 a ++ " / " ++ shw 1 b
 
-            shw 1 (Prod vals) =
-                pre ++ (concat $ List.intersperse "*" $
-                    map (showWithPow . lengthSnd) $ collectCopies nonConsts)
+shw 0 (Sum vals) =
+    concat $ List.intersperse " + " $ map show $ List.sortBy cmp vals
+    where
+        Prod a `cmp` Prod b = length b `compare` length a
+        _      `cmp` Prod _ = GT
+        Prod _ `cmp` _      = LT
+        _      `cmp` _      = EQ
 
-                where
-                    isConst (Num a) = True
-                    isConst _       = False
+shw 0 a = shw 1 a
 
-                    consts    = map (\(Num n) -> n) $ filter isConst vals
-                    nonConsts = filter (not . isConst) vals
+shw 1 (Prod vals) =
+    pre ++ (concat $ List.intersperse "*" $
+        map (showWithPow . lengthSnd) $ collectCopies nonConsts)
 
-                    pre = if null consts || product consts == 1
-                            then ""
-                            else case product consts of
-                                1    -> ""
-                                (-1) -> "-"
-                                _    -> show (product consts)
+    where
+        isConst (Num a) = True
+        isConst _       = False
 
-                    lengthSnd (a,b) = (a,length b)
+        consts    = map (\(Num n) -> n) $ filter isConst vals
+        nonConsts = filter (not . isConst) vals
 
-                    showWithPow (a,n) = shw 1 a ++ (case n of
-                                                        1 -> ""
-                                                        2 -> "²"
-                                                        3 -> "³"
-                                                        4 -> "⁴"
-                                                        5 -> "⁵"
-                                                        6 -> "⁶"
-                                                        7 -> "⁷"
-                                                        8 -> "⁸"
-                                                        9 -> "⁹"
-                                                        n -> "^" ++ show n)
+        pre = if null consts || product consts == 1
+                then ""
+                else case product consts of
+                    1    -> ""
+                    (-1) -> "-"
+                    _    -> show (product consts)
 
-            shw 1 (Num a) = show a
-            shw 1 (Var s) = s
-            shw 1 a       = "(" ++ shw 0 a ++ ")"
+        lengthSnd (a,b) = (a,length b)
+
+        showWithPow (a,n) = shw 1 a ++ (case n of
+                                            1 -> ""
+                                            2 -> "²"
+                                            3 -> "³"
+                                            4 -> "⁴"
+                                            5 -> "⁵"
+                                            6 -> "⁶"
+                                            7 -> "⁷"
+                                            8 -> "⁸"
+                                            9 -> "⁹"
+                                            n -> "^" ++ show n)
+
+shw 1 (Num a) = show a
+shw 1 (Var s) = s
+shw 1 a       = "(" ++ shw 0 a ++ ")"
 
 --The 'Eq' instance just uses symbolic equality.
 instance Eq Expr where
@@ -126,6 +136,8 @@ instance Ord Expr where
     Div a c   `compare` Div b d   = (a,c) `compare` (b,d)
     Div _ _   `compare` _         = LT
     App f _ a `compare` App g _ b = (f,a) `compare` (g,b)
+
+instance SymbolicExpr Expr
 
 instance Symbolic Expr where
     constC         = Num
