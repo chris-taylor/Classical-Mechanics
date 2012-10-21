@@ -2,7 +2,7 @@
 
 ## What is this project?
 
-At its core, it is an implementation of the book *Structure and Interpretation of Classical Mechanics* by Gerald Jay Sussman and Jack Wisdom, in Haskell.
+At its core, it is an implementation of the book *Structure and Interpretation of Classical Mechanics* by Gerald Jay Sussman and Jack Wisdom.
 
 This involves creating a Haskell implementation of the Scheme library *scmutils*, which includes toolboxes for symbolic algebra, differentiation and integration.
 
