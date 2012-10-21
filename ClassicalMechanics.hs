@@ -50,58 +50,58 @@ up :: Functor f => f (a -> b) -> a -> f b
 up fs t = fmap ($t) fs
 
 -- |Coordinate function.
---q :: Expr -> Vector Expr
---q = up $ V (literalFunction x)
---           (literalFunction y)
---           (literalFunction z)
+q :: Expr -> Vector Expr
+q = up $ V (literalFunction x)
+           (literalFunction y)
+           (literalFunction z)
 
 -- |Create a literal symbolic function.
---literalFunction :: Expr -> Expr -> Expr
---literalFunction (Var f) x = App f undefined x
+literalFunction :: Expr -> Expr -> Expr
+literalFunction f expr = atomE $ App (getVar f) expr
 
 ------------------------------
 -- Symbolic derivatives
 ------------------------------
 
---class Fractional a => Differentiable a where
---    d :: Applicative f => (a -> f a) -> a -> f a
+class Fractional a => Differentiable a where
+    d :: Applicative f => (a -> f a) -> a -> f a
 
---instance Differentiable Float where
---    d f x = fmap (/(2*dx)) $ (liftA2 (-) (f (x+dx)) (f (x-dx)))
---        where
---            dx  = 1e-4
+instance Differentiable Float where
+    d f x = fmap (/(2*dx)) $ (liftA2 (-) (f (x+dx)) (f (x-dx)))
+        where
+            dx  = 1e-4
 
---instance Differentiable Double where
---    d f x = fmap (/(2*dx)) $ (liftA2 (-) (f (x+dx)) (f (x-dx)))
---        where
---            dx  = 1e-8
+instance Differentiable Double where
+    d f x = fmap (/(2*dx)) $ (liftA2 (-) (f (x+dx)) (f (x-dx)))
+        where
+            dx  = 1e-8
 
---instance Differentiable Expr where
---    d f = fmap (App "D" undefined) . f
+instance Differentiable Expr where
+    d f = fmap (literalFunction (varE "D")) . f
 
 ------------------------------
 -- Local coordinate function
 ------------------------------
 
---gamma :: (Applicative f, Differentiable a) => (a -> f a) -> a -> Local f a
---gamma q t = Local t (q t) (d q t)
+gamma :: (Applicative f, Differentiable a) => (a -> f a) -> a -> Local f a
+gamma q t = Local t (q t) (d q t)
 
 ------------------------------
 -- Free particle
 ------------------------------
 
---type Mass = Real
+type Mass = Real
 
---lagrangianFreeParticle :: Fractional a => a -> Local Vector a -> a
---lagrangianFreeParticle mass local = 0.5 * mass * (dot v v)
---    where v = velocity local
+lagrangianFreeParticle :: Fractional a => a -> Local Vector a -> a
+lagrangianFreeParticle mass local = 0.5 * mass * (dot v v)
+    where v = velocity local
 
 ------------------------------
 -- Lagrangian action function
 ------------------------------
 
---lagrangianAction :: (Applicative f, Differentiable a) => (Local f a -> a) -> (a -> f a) -> a -> a -> a
---lagrangianAction l q t1 t2 = definiteIntegral (l . gamma q) t1 t2
+lagrangianAction :: (Applicative f, Differentiable a) => (Local f a -> a) -> (a -> f a) -> a -> a -> a
+lagrangianAction l q t1 t2 = definiteIntegral (l . gamma q) t1 t2
 
 -- Test path
 
