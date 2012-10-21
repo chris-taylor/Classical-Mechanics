@@ -48,11 +48,20 @@ class SymbolicLiteralFun a where
     litC :: String -> a -> a
     litD :: a -> Maybe (String, a)
 
--- |Convenience function - is its argument a constant?
+-- |Is the argument a constant?
 isConst :: Symbolic a => a -> Bool
-isConst v = case constD v of
-                Just _  -> True
-                Nothing -> False
+isConst (constD -> Just _) = True
+isConst _                  = False
+
+-- |Is the argument a sum?
+isSum :: SymbolicSum a => a -> Bool
+isSum (sumD -> Just _) = True
+isSum _                = False
+
+-- |Is the argument a product?
+isProd :: SymbolicProd a => a -> Bool
+isProd (prodD -> Just _) = True
+isProd _                 = False
 
 -- |Symbolically sum the values in a list, pulling constants to the front
 --and recursively expanding out nested sums.
@@ -62,10 +71,6 @@ sumC' vals =
         nonSums   = filter (not . isSum) vals
         consts    = map (\(constD -> Just a) -> a) (filter isConst vals)
         nonConsts = filter (not . isConst) vals
-
-        isSum v   = case sumD v of
-                        Just _  -> True
-                        Nothing -> False
 
         sumC'' [x] = x
         sumC'' xs  = sumC xs
@@ -89,10 +94,6 @@ prodC' vals =
         nonProds  = filter (not . isProd) vals
         consts    = map (\(constD -> Just a) -> a) (filter isConst vals)
         nonConsts = filter (not . isConst) vals
-
-        isProd v  = case prodD v of
-                        Just _  -> True
-                        Nothing -> False
 
         prodC'' [x] = x
         prodC'' xs  = prodC xs
