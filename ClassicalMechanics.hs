@@ -8,6 +8,7 @@ import Prelude hiding (Real,(^))
 import Expr
 import Differentiation
 import Integration
+import Symbolic
 
 ------------------------------
 -- Vector type
@@ -57,7 +58,7 @@ q = up $ V (literalFunction x)
 
 -- |Create a literal symbolic function.
 literalFunction :: Expr -> Expr -> Expr
-literalFunction (Var f) x = Lit f x
+literalFunction (Var f) x = App f undefined x
 
 ------------------------------
 -- Symbolic derivatives
@@ -77,10 +78,7 @@ instance Differentiable Double where
             dx  = 1e-8
 
 instance Differentiable Expr where
-    d f = fmap (Lit "D") . f
-
---d :: Functor f => (Expr -> f Expr) -> Expr -> f Expr
---d q = fmap (Lit "D") . q
+    d f = fmap (App "D" undefined) . f
 
 ------------------------------
 -- Local coordinate function
