@@ -5,10 +5,11 @@ module ClassicalMechanics where
 import Control.Applicative
 import Prelude hiding (Real)
 
+import Symbolic
 import Expr
 import Differentiation
 import Integration
-import Symbolic
+import Simplify
 
 ------------------------------
 -- Vector type
