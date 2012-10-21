@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Expr2 where
+module Expr where
 
 import           GHC.Exts (IsString (..))
 import           Prelude hiding (Real)
@@ -8,23 +8,57 @@ import qualified Data.Map  as Map
 import qualified Data.List as List
 
 type Real = Double
+type Var  = String
 
 newtype Expr = Expr (Map.Map Prod Real) deriving (Eq,Ord)
 
 newtype Prod = Prod (Map.Map Atom Int) deriving (Eq,Ord)
 
-data Atom = Var String
+data Atom = Var Var
           | App String Expr
-          deriving (Eq,Ord)
+          deriving (Eq,Ord,Show)
 
 constE :: Real -> Expr
 constE c = Expr $ Map.singleton (Prod $ Map.empty) c
 
-varE :: String -> Expr
-varE v = Expr $ Map.singleton (Prod $ Map.singleton (Var v) 1) 1
-
 atomE :: Atom -> Expr
 atomE a = Expr $ Map.singleton (Prod $ Map.singleton a 1) 1
+
+varE :: String -> Expr
+varE = atomE . Var
+
+isVarA :: Atom -> Bool
+isVarA (Var _) = True
+isVarA _       = False
+
+getVarA :: Atom -> Var
+getVarA (Var v) = v
+getVarA _       = error "Not a variable!"
+
+isConst :: Prod -> Bool
+isConst (Prod m) = Map.null m
+
+isAtom :: Expr -> Bool
+isAtom (Expr m) = Map.size m == 1 && c == 1 && Map.size p == 1 && n == 1
+    where
+        (Prod p, c) = Map.findMin m
+        (atom, n)   = Map.findMin p
+
+getAtom :: Expr -> Atom
+getAtom e@(Expr m) = if not (isAtom e)
+    then error "Not an atom!"
+    else atom
+        where
+            (Prod p, c) = Map.findMin m
+            (atom, _)   = Map.findMin p
+
+isVar :: Expr -> Bool
+isVar e = isAtom e && isVarA (getAtom e)
+
+getVar :: Expr -> Var
+getVar e = if isVar e
+    then getVarA (getAtom e)
+    else error "Not a variable!"
 
 showAtom :: Atom -> String
 showAtom (Var s)   = s
@@ -50,10 +84,12 @@ showExpr (Expr m) = List.intercalate " + " . map shw $ Map.toList m
     where
         shw (p,n) = pre ++ showProd p
             where
-                pre = case n of
-                        1    -> ""
-                        (-1) -> "-"
-                        n    -> show n
+                pre = if isConst p
+                        then show n
+                        else case n of
+                                1    -> ""
+                                (-1) -> "-"
+                                _    -> show n
 
 instance Show Expr where
     show = showExpr
@@ -70,9 +106,12 @@ instance Num Expr where
         where
             mul (Prod xs, a) (Prod ys, b) = (Prod $ Map.unionWith (+) xs ys, a * b)
 
+    fromInteger = constE . fromInteger
+
     negate (Expr as) = Expr $ Map.map negate as
 
-    fromInteger = constE . fromInteger
+    abs    _ = undefined
+    signum _ = undefined
 
 instance Fractional Expr where
     fromRational = constE . fromRational
