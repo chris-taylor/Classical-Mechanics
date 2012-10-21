@@ -111,10 +111,21 @@ instance Show Expr where
 instance Eq Expr where
     a == b = a === b
 
---The 'Ord' instance is necessary to do definite integrals, where the limits
---can be supplied as numbers or as expressions representing numbers.
+--The 'Ord' instance is useful for storing Exprs in Maps, Sets etc. It is not
+--used for storing symbolic inequalities, which is currently not supported in
+--this module.
 instance Ord Expr where
-    compare (Num a) (Num b) = compare a b
+    Num a     `compare` Num b     = a `compare` b
+    Num _     `compare` _         = LT
+    Var a     `compare` Var b     = a `compare` b
+    Var _     `compare` _         = LT
+    Sum a     `compare` Sum b     = a `compare` b
+    Sum _     `compare` _         = LT
+    Prod a    `compare` Prod b    = a `compare` b
+    Prod _    `compare` _         = LT
+    Div a c   `compare` Div b d   = (a,c) `compare` (b,d)
+    Div _ _   `compare` _         = LT
+    App f _ a `compare` App g _ b = (f,a) `compare` (g,b)
 
 instance Symbolic Expr where
     constC         = Num
