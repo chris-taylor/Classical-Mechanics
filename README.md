@@ -6,7 +6,7 @@ At its core, it is an implementation of the book *Structure and Interpretation o
 
 This involves creating a Haskell implementation of the Scheme library *scmutils*, which includes toolboxes for symbolic algebra, differentiation and integration.
 
-A key feature is that the routines for differentation and integration are agnostic to the underlying type - therefore the same functions are overloaded to work with symbolic exprexpressions or with numerical quantities. For example, we could define a polynomial function
+A key feature is that the routines for differentation and integration are agnostic to the underlying type - the same functions are overloaded to work with symbolic expressions or with numerical quantities. For example, we could define a polynomial function
 
     >>> let f a = (1+a)^3
 
@@ -20,7 +20,7 @@ which applies equally to numbers and symbolic expressions:
 We can also find the first four derivates both numerically and symbolically:
 
     >>> dTake 4 $ f (dVar 2)
-    [27,27,18,16]
+    [27,27,18,6]
     >>> dTake 4 $ f (dVar x)
     [1.0 + 3.0x + 3.0x² + x³,3.0 + 6.0x + 3.0x²,6.0 + 6.0x,6.0]
 
