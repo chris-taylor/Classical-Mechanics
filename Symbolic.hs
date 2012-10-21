@@ -15,6 +15,11 @@ import Prelude hiding (Real)
 type Real = Double
 type Var  = String
 
+-- |The 'SymbolicExpr' class collects together all the classes in this module
+--for convenience.
+class (Symbolic a, SymbolicSum a, SymbolicProd a, SymbolicDiv a,
+       SymbolicRealFun a) => SymbolicExpr a where
+
 -- |Instances of the 'Symbolic' class denotes types that have both constants
 --and variables.
 class Symbolic a where
