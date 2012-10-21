@@ -3,7 +3,7 @@
 module Expr where
 
 import           GHC.Exts (IsString (..))
-import           Prelude hiding (Real,(^))
+import           Prelude hiding (Real)
 import qualified Data.Map  as Map
 import qualified Data.List as List
 
@@ -107,8 +107,14 @@ instance Show Expr where
             shw 1 (Var s) = s
             shw 1 a       = "(" ++ shw 0 a ++ ")"
 
+--The 'Eq' instance just uses symbolic equality.
 instance Eq Expr where
     a == b = a === b
+
+--The 'Ord' instance is necessary to do definite integrals, where the limits
+--can be supplied as numbers or as expressions representing numbers.
+instance Ord Expr where
+    compare (Num a) (Num b) = compare a b
 
 instance Symbolic Expr where
     constC         = Num
@@ -134,6 +140,11 @@ instance SymbolicDiv Expr where
     divD (Div a b) = Just (a,b)
     divD _         = Nothing
 
+instance SymbolicRealFun Expr where
+    funC str f a       = App str f a
+    funD (App str f a) = Just (str,f,a)
+    funD _             = Nothing
+
 instance Num Expr where
     fromInteger = Num . fromInteger
     a + b       = sumC'  [a,b]
@@ -142,11 +153,6 @@ instance Num Expr where
 
     abs    _ = undefined
     signum _ = undefined
-
---The 'Ord' instance is necessary to do definite integrals, where the limits
---can be supplied as numbers or as expressions representing numbers.
-instance Ord Expr where
-    compare (Num a) (Num b) = compare a b
 
 instance Fractional Expr where
     (/) = Div

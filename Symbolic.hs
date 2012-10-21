@@ -38,6 +38,16 @@ class SymbolicDiv a where
     divC :: a -> a -> a
     divD :: a -> Maybe (a,a)
 
+-- |Instances of the 'SymbolicRealFun' class have floating point functions.
+class SymbolicRealFun a where
+    funC :: String -> (Real -> Real) -> a -> a
+    funD :: a -> Maybe (String, Real -> Real, a)
+
+-- |Instances of the 'SymbolicLiteralFun' class have literal functions.
+class SymbolicLiteralFun a where
+    litC :: String -> a -> a
+    litD :: a -> Maybe (String, a)
+
 -- |Convenience function - is its argument a constant?
 isConst :: Symbolic a => a -> Bool
 isConst v = case constD v of
@@ -114,13 +124,15 @@ listEq _ [] [] = True
 listEq _  _  _ = False
 
 -- |Equality for symbolic expressions.
-(===) :: (Symbolic a, SymbolicSum a, SymbolicProd a, SymbolicDiv a) => a -> a -> Bool
-(constD -> Just a)   === (constD -> Just b)   = a == b
-(varD   -> Just a)   === (varD   -> Just b)   = a == b
-(sumD   -> Just a)   === (sumD   -> Just b)   = listEq (===) a b
-(prodD  -> Just a)   === (prodD  -> Just b)   = listEq (===) a b
-(divD -> Just (a,c)) === (divD -> Just (b,d)) = a === b && c === d
-_                    === _                    = False
+(===) :: (Symbolic a, SymbolicSum a, SymbolicProd a,
+          SymbolicDiv a, SymbolicRealFun a) => a -> a -> Bool
+(constD -> Just a)     === (constD -> Just b)     = a == b
+(varD   -> Just a)     === (varD   -> Just b)     = a == b
+(sumD   -> Just a)     === (sumD   -> Just b)     = listEq (===) a b
+(prodD  -> Just a)     === (prodD  -> Just b)     = listEq (===) a b
+(divD -> Just (a,c))   === (divD -> Just (b,d))   = a === b && c === d
+(funD -> Just (f,_,a)) === (funD -> Just (g,_,b)) = f == g && a === b
+_                      === _                      = False
 
 
 

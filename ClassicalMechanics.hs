@@ -3,7 +3,7 @@
 module ClassicalMechanics where
 
 import Control.Applicative
-import Prelude hiding (Real,(^))
+import Prelude hiding (Real)
 
 import Expr
 import Differentiation
