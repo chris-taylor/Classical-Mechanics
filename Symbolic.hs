@@ -11,7 +11,6 @@
 module Symbolic where
 
 import Prelude hiding (Real)
-import Data.Maybe as Maybe
 
 type Real = Double
 type Var  = String
@@ -34,6 +33,11 @@ class SymbolicProd a where
     prodC :: [a] -> a
     prodD ::  a -> Maybe [a]
 
+-- |Instances of the 'SymbolicDiv' class are types that can be divided.
+class SymbolicDiv a where
+    divC :: a -> a -> a
+    divD :: a -> Maybe (a,a)
+
 -- |Convenience function - is its argument a constant?
 isConst :: Symbolic a => a -> Bool
 isConst v = case constD v of
@@ -46,7 +50,7 @@ sumC' :: (Symbolic a, SymbolicSum a) => [a] -> a
 sumC' vals =
     let sums      = filter isSum vals
         nonSums   = filter (not . isSum) vals
-        consts    = map (Maybe.fromJust . constD) (filter isConst vals)
+        consts    = map (\(constD -> Just a) -> a) (filter isConst vals)
         nonConsts = filter (not . isConst) vals
 
         isSum v   = case sumD v of
@@ -65,7 +69,7 @@ sumC' vals =
                                 then []
                                 else [constC (sum consts)]) ++ nonConsts
 
-            else sumC' $ nonSums ++ concatMap (Maybe.fromJust . sumD) sums
+            else sumC' $ concatMap (\(sumD -> Just a) -> a) sums ++ nonSums
 
 -- |Symbolically multiply the values in a list, pulling constants to the front
 --and recursively expanding out nested products.
@@ -73,7 +77,7 @@ prodC' :: (Symbolic a, SymbolicProd a) => [a] -> a
 prodC' vals =
     let prods     = filter isProd vals
         nonProds  = filter (not . isProd) vals
-        consts    = map (Maybe.fromJust . constD) (filter isConst vals)
+        consts    = map (\(constD -> Just a) -> a) (filter isConst vals)
         nonConsts = filter (not . isConst) vals
 
         isProd v  = case prodD v of
@@ -93,7 +97,7 @@ prodC' vals =
                         (l, 1) -> prodC l
                         (l, n) -> prodC $ (constC n) : l
 
-            else prodC' $ nonProds ++ concatMap (Maybe.fromJust . prodD) prods
+            else prodC' $ concatMap (\(prodD -> Just a) -> a) prods ++ nonProds
 
 -- |Equality between two lists, ignoring ordering. This is O(n^2) in the length
 --of the list.
@@ -110,12 +114,13 @@ listEq _ [] [] = True
 listEq _  _  _ = False
 
 -- |Equality for symbolic expressions.
-(===) :: (Symbolic a, SymbolicSum a, SymbolicProd a) => a -> a -> Bool
-(constD -> Just a) === (constD -> Just b) = a == b
-(varD   -> Just a) === (varD   -> Just b) = a == b
-(sumD   -> Just a) === (sumD   -> Just b) = listEq (===) a b
-(prodD  -> Just a) === (prodD  -> Just b) = listEq (===) a b
-_                  === _                  = False
+(===) :: (Symbolic a, SymbolicSum a, SymbolicProd a, SymbolicDiv a) => a -> a -> Bool
+(constD -> Just a)   === (constD -> Just b)   = a == b
+(varD   -> Just a)   === (varD   -> Just b)   = a == b
+(sumD   -> Just a)   === (sumD   -> Just b)   = listEq (===) a b
+(prodD  -> Just a)   === (prodD  -> Just b)   = listEq (===) a b
+(divD -> Just (a,c)) === (divD -> Just (b,d)) = a === b && c === d
+_                    === _                    = False
 
 
 
