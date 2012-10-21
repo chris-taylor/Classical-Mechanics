@@ -17,7 +17,7 @@ which applies equally to numbers and symbolic expressions:
     >>> f x
     1.0 + 3.0x + 3.0x² + x³
 
-We can also find the first four derivates both numerically and symbolically?
+We can also find the first four derivates both numerically and symbolically:
 
     >>> dTake 4 $ f (dVar 2)
     [27,27,18,16]
