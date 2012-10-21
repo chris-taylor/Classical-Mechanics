@@ -68,7 +68,7 @@ instance Num Expr where
     Expr as * Expr bs =
         Expr $ Map.fromListWith (+) [ mul a b | a <- Map.toList as, b <- Map.toList bs ]
         where
-            mul (Prod xs,cx) (Prod ys,cy) = (Prod $ Map.unionWith (+) xs ys, cx * cy)
+            mul (Prod xs, a) (Prod ys, b) = (Prod $ Map.unionWith (+) xs ys, a * b)
 
     negate (Expr as) = Expr $ Map.map negate as
 
