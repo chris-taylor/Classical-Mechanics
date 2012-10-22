@@ -8,6 +8,7 @@ import Prelude hiding (Real)
 import Expr
 import Differentiation
 import Integration
+import Optimization
 
 ------------------------------
 -- Vector type
@@ -130,9 +131,30 @@ lagrangianFreeParticle mass local = 0.5 * mass * (dot v v)
 -- Lagrangian action function
 ------------------------------
 
-lagrangianAction :: (Applicative f, Differentiable a) => (Local f a -> a) -> (a -> f a) -> a -> a -> a
+lagrangianAction :: (Applicative f) => (Local f Real -> Real) -> (Real -> f Real) -> Real -> Real -> Real
 lagrangianAction l q t1 t2 = definiteIntegral (l . gamma q) t1 t2
 
--- Test path
+------------------------------
+-- Action over a test path
+------------------------------
 
+testPath :: Real -> Vector Real
 testPath t = V (4 * t + 7) (3 * t + 5) (2 * t + 1)
+
+makeEta :: (Applicative f, Num (f Real)) =>
+           (Real -> f Real)
+        -> Real
+        -> Real
+        -> Real -> f Real
+makeEta nu t1 t2 t = pure (t - t1) * pure (t - t2) * nu t
+
+variedFreeParticleAction :: Real
+                         -> (Real -> Vector Real)
+                         -> (Real -> Vector Real)
+                         -> Real
+                         -> Real
+                         -> Real
+                         -> Real 
+variedFreeParticleAction mass q nu t1 t2 epsilon =
+    let eta = makeEta nu t1 t2
+     in lagrangianAction (lagrangianFreeParticle mass) (q + (fmap.fmap) (epsilon*) eta) t1 t2
