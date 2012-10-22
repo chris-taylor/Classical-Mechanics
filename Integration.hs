@@ -1,16 +1,6 @@
 module Integration where
 
-import Data.List (foldl')
+import Numeric.GSL.Integration
 
-midPointIntegral :: Fractional a => Int -> (a -> a) -> a -> a -> a
-midPointIntegral n f a b = dx * foldl' go 0 points
-    where
-        dx = (b - a) / fromIntegral n
-        points = take n $ iterate (+dx) (a+dx/2)
-        go result x = result + f x
-
-definiteIntegral :: Fractional a => (a -> a) -> a -> a -> a
-definiteIntegral = midPointIntegral 1000
-
--- Utils
-
+definiteIntegral :: (Double -> Double) -> Double -> Double -> Double
+definiteIntegral f a b = fst $ integrateQNG 1e-6 f a b
