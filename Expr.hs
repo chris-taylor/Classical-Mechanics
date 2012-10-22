@@ -18,6 +18,10 @@ data Atom = Var Var
           | App String Expr
           deriving (Eq,Ord,Show)
 
+------------------------------
+-- Constructors
+------------------------------
+
 constE :: Real -> Expr
 constE c = Expr $ Map.singleton (Prod $ Map.empty) c
 
@@ -27,6 +31,10 @@ atomE a = Expr $ Map.singleton (Prod $ Map.singleton a 1) 1
 varE :: String -> Expr
 varE = atomE . Var
 
+------------------------------
+-- Predicates/selectors for atoms
+------------------------------
+
 isVarA :: Atom -> Bool
 isVarA (Var _) = True
 isVarA _       = False
@@ -35,8 +43,16 @@ getVarA :: Atom -> Var
 getVarA (Var v) = v
 getVarA _       = error "Not a variable!"
 
+------------------------------
+-- Predicates/selectors for products
+------------------------------
+
 isConstP :: Prod -> Bool
 isConstP (Prod m) = Map.null m
+
+------------------------------
+-- Predicates/selectors for expressions
+------------------------------
 
 isConst :: Expr -> Bool
 isConst (Expr m) = Map.size m == 1 && Map.size p == 0
@@ -72,12 +88,16 @@ getVar e = if isVar e
     then getVarA (getAtom e)
     else error "Not a variable!"
 
+------------------------------
+-- Convert to string
+------------------------------
+
 showAtom :: Atom -> String
 showAtom (Var s)   = s
 showAtom (App f s) = f ++ "(" ++ show s ++ ")"
 
 showProd :: Prod -> String
-showProd (Prod m) = concatMap shw $ Map.toList m
+showProd (Prod m) = List.intercalate " " $ map shw $ Map.toList m
     where
         shw (e,n) = showAtom e ++ (case n of
                                     1 -> ""
@@ -111,6 +131,10 @@ instance Show Expr where
 
 instance IsString Expr where
     fromString = varE
+
+------------------------------
+-- Numeric instances
+------------------------------
 
 instance Num Expr where
     Expr as + Expr bs =
