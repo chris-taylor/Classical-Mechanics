@@ -108,7 +108,8 @@ instance Differentiable Double where
             dx  = 1e-8
 
 instance Differentiable Expr where
-    d f = fmap (literalFunction (varE "D")) . f
+    d f = fmap diffExpr . f
+            where diffExpr = atomE . modifyA ('D':) . getAtom
 
 ------------------------------
 -- Local coordinate function
@@ -123,6 +124,8 @@ gamma q t = Local t (q t) (d q t)
 
 type Mass = Real
 
+-- |Free particle Lagrangian. The user should supply a mass and a 'local tuple' consisting of time,
+--position and velocity.
 lagrangianFreeParticle :: Fractional a => a -> Local Vector a -> a
 lagrangianFreeParticle mass local = 0.5 * mass * (dot v v)
     where v = velocity local
@@ -131,6 +134,7 @@ lagrangianFreeParticle mass local = 0.5 * mass * (dot v v)
 -- Lagrangian action function
 ------------------------------
 
+-- |Numerically integrate a Lagrangian over a path through configuration space.
 lagrangianAction :: (Applicative f) => (Local f Real -> Real) -> (Real -> f Real) -> Real -> Real -> Real
 lagrangianAction l q t1 t2 = definiteIntegral (l . gamma q) t1 t2
 
@@ -138,23 +142,29 @@ lagrangianAction l q t1 t2 = definiteIntegral (l . gamma q) t1 t2
 -- Action over a test path
 ------------------------------
 
+-- |A straight-line path between two points.
 testPath :: Real -> Vector Real
 testPath t = V (4 * t + 7) (3 * t + 5) (2 * t + 1)
 
+-- |Construct a variational path, i.e. one which is zero at the start and end points and nonzero
+--in-between.
 makeEta :: (Applicative f, Num (f Real)) =>
-           (Real -> f Real)
-        -> Real
-        -> Real
-        -> Real -> f Real
+           (Real -> f Real)     -- function used to build deviation
+        -> Real                 -- initial time
+        -> Real                 -- final time
+        -> Real -> f Real       -- deviation
 makeEta nu t1 t2 t = pure (t - t1) * pure (t - t2) * nu t
 
-variedFreeParticleAction :: Real
-                         -> (Real -> Vector Real)
-                         -> (Real -> Vector Real)
-                         -> Real
-                         -> Real
-                         -> Real
-                         -> Real 
+-- |Compute the action of a free particle integrated over a variational path. The first path
+--supplied is the 'base' path and the second is the variation.
+variedFreeParticleAction :: Real                    -- particle mass
+                         -> (Real -> Vector Real)   -- path through configuration space
+                         -> (Real -> Vector Real)   -- function to build deviation
+                         -> Real                    -- initial time
+                         -> Real                    -- final time
+                         -> Real                    -- size of deviation
+                         -> Real                    -- action
 variedFreeParticleAction mass q nu t1 t2 epsilon =
     let eta = makeEta nu t1 t2
-     in lagrangianAction (lagrangianFreeParticle mass) (q + (fmap.fmap) (epsilon*) eta) t1 t2
+        eps = pure (pure epsilon)
+     in lagrangianAction (lagrangianFreeParticle mass) (q + eps * eta) t1 t2
