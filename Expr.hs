@@ -35,8 +35,20 @@ getVarA :: Atom -> Var
 getVarA (Var v) = v
 getVarA _       = error "Not a variable!"
 
-isConst :: Prod -> Bool
-isConst (Prod m) = Map.null m
+isConstP :: Prod -> Bool
+isConstP (Prod m) = Map.null m
+
+isConst :: Expr -> Bool
+isConst (Expr m) = Map.size m == 1 && Map.size p == 0
+    where
+        (Prod p, _) = Map.findMin m
+
+getConst :: Expr -> Real
+getConst e@(Expr m) = if isConst e
+    then c
+    else error "Not a constant!"
+    where
+        (Prod p, c) = Map.findMin m
 
 isAtom :: Expr -> Bool
 isAtom (Expr m) = Map.size m == 1 && c == 1 && Map.size p == 1 && n == 1
@@ -80,11 +92,14 @@ showProd (Prod m) = concatMap shw $ Map.toList m
                                     n -> "^" ++ show n)
 
 showExpr :: Expr -> String
-showExpr (Expr m) = List.intercalate " + " . map shw $ Map.toList m
+showExpr (Expr m) =
+    if Map.null m
+        then "0"
+        else List.intercalate " + " . map shw $ Map.toList m
     where
         shw (p,n) = pre ++ showProd p
             where
-                pre = if isConst p
+                pre = if isConstP p
                         then show n
                         else case n of
                                 1    -> ""
@@ -99,7 +114,7 @@ instance IsString Expr where
 
 instance Num Expr where
     Expr as + Expr bs =
-        Expr $ Map.unionWith (+) as bs
+        Expr $ Map.filter (/=0) $ Map.unionWith (+) as bs
 
     Expr as * Expr bs =
         Expr $ Map.fromListWith (+) [ mul a b | a <- Map.toList as, b <- Map.toList bs ]
