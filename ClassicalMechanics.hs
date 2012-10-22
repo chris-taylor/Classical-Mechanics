@@ -25,6 +25,36 @@ instance Applicative Vector where
     pure a = V a a a
     V f g h <*> V x y z = V (f x) (g y) (h z)
 
+instance Num a => Num (Vector a) where
+    fromInteger = pure . fromInteger
+    (+) = liftA2 (+)
+    (-) = liftA2 (-)
+    (*) = liftA2 (*)
+    negate = fmap negate
+    signum = fmap signum
+    abs    = fmap abs
+
+instance Fractional a => Fractional (Vector a) where
+    fromRational = pure . fromRational
+    (/)   = liftA2 (/)
+    recip = fmap recip
+
+instance Floating a => Floating (Vector a) where
+    pi    = pure pi
+    exp   = liftA exp
+    log   = liftA log
+    sqrt  = liftA sqrt
+    sin   = liftA sin
+    cos   = liftA cos
+    asin  = liftA asin
+    acos  = liftA acos
+    atan  = liftA atan
+    sinh  = liftA sinh
+    cosh  = liftA cosh
+    asinh = liftA asinh
+    acosh = liftA acosh
+    atanh = liftA atanh
+
 dot :: Num a => Vector a -> Vector a -> a
 dot (V x y z) (V x' y' z') = x * x' + y * y' + z * z'
 
