@@ -43,6 +43,18 @@ getVarA :: Atom -> Var
 getVarA (Var v) = v
 getVarA _       = error "Not a variable!"
 
+isAppA :: Atom -> Bool
+isAppA (App _ _) = True
+isAppA _         = False
+
+getAppA :: Atom -> (String, Expr)
+getAppA (App f e) = (f, e)
+getAppA _         = error "Not a variable!"
+
+modifyA :: (Var -> Var) -> Atom -> Atom
+modifyA g (Var v)   = Var (g v)
+modifyA g (App f e) = App (g f) e
+
 ------------------------------
 -- Predicates/selectors for products
 ------------------------------
