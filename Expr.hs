@@ -209,7 +209,11 @@ instance AdditiveGroup Expr where
 
 instance VectorSpace Expr where
     type Scalar Expr = Expr
+
     (*>) = (*)
+
+    toList x = [x]
+    fromList [x] = x
 
 instance InnerSpace Expr where
     dot = (*)
