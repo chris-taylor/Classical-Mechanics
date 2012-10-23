@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, TypeFamilies #-}
 
 module Expr where
 
@@ -6,6 +6,9 @@ import           GHC.Exts (IsString (..))
 import           Prelude hiding (Real)
 import qualified Data.Map  as Map
 import qualified Data.List as List
+
+import AdditiveGroup
+import VectorSpace
 
 type Real = Double
 type Var  = String
@@ -186,6 +189,18 @@ instance Floating Expr where
     acosh = atomE . App "acosh"
     asinh = atomE . App "asinh"
     atanh = atomE . App "atanh"
+
+instance AdditiveGroup Expr where
+    zeroV = 0
+    (<+>) = (+)
+    (<->) = (-)
+
+instance VectorSpace Expr where
+    type Scalar Expr = Expr
+    (*>) = (*)
+
+instance InnerSpace Expr where
+    dot = (*)
 
 ------------------------------
 -- Atomic variables
