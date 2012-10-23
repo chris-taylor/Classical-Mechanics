@@ -60,7 +60,6 @@ instance Differentiable Double where
 -- Local coordinate function
 ------------------------------
 
---gamma :: (Applicative f, Differentiable a) => (a -> f a) -> a -> Local f a
 gamma :: (VectorSpace v, s ~ Scalar v, Differentiable s) => (s -> v) -> s -> Local v s
 gamma q t = Local t (q t) (d q t)
 
@@ -70,22 +69,20 @@ gamma q t = Local t (q t) (d q t)
 
 -- |Free particle Lagrangian. The user should supply a mass and a 'local tuple' consisting of time,
 --position and velocity.
---lagrangianFreeParticle :: (Fractional a, InnerProduct v a) => a -> Local v a -> a
-lagrangianFreeParticle :: (InnerSpace v, s ~ Scalar v, Fractional s) => s -> Local v a -> s
-lagrangianFreeParticle mass local = 0.5 * mass * (dot v v)
+lFreeParticle :: (InnerSpace v, s ~ Scalar v, Fractional s) => s -> Local v a -> s
+lFreeParticle mass local = 0.5 * mass * (dot v v)
     where v = velocity local
+
+-- |Harmonic oscillator lagrandian. The user should supply a mass and a stiffness constant.
+lHarmonic :: (InnerSpace v, s ~ Scalar v, Fractional s) => s -> s -> Local v a -> s
+lHarmonic mass k local = 0.5 * mass * (dot v v) + 0.5 * k * (dot q q)
+    where q = position local
+          v = velocity local
 
 ------------------------------
 -- Lagrangian action function
 ------------------------------
 
--- |Numerically integrate a Lagrangian over a path through configuration space.
---lagrangianAction :: (Applicative f) =>
---                    (Local (f Real) Real -> Real)   -- lagrangian
---                 -> (Real -> f Real)                -- particle path
---                 -> Real                            -- initial time
---                 -> Real                            -- final time
---                 -> Real                            -- action
 lagrangianAction :: (VectorSpace v, Scalar v ~ Real) =>
                     (Local v Real -> Real)  -- lagrangian
                  -> (Real -> v)             -- particle path
@@ -118,7 +115,7 @@ variedFreeParticleAction :: (InnerSpace v, Scalar v ~ Double) =>
                          -> Real          -- size of deviation
                          -> Real          -- action
 variedFreeParticleAction mass q nu t1 t2 epsilon =
-    lagrangianAction (lagrangianFreeParticle mass) (q <+> epsilon *> eta) t1 t2
+    lagrangianAction (lFreeParticle mass) (q <+> epsilon *> eta) t1 t2
     where
         eta = makeEta nu t1 t2
 
@@ -126,7 +123,7 @@ variedFreeParticleAction mass q nu t1 t2 epsilon =
 --    where
 --        path = makePath t0 t1 qs
 
---makePath :: (VectorSpace v, s ~ Scalar v, Fractional s, Ord s) => s -> s -> [v] -> (s -> v)
+makePath :: (VectorSpace v, s ~ Scalar v, Fractional s, Ord s) => s -> s -> [v] -> (s -> v)
 makePath t0 t1 qs =
     let n  = length qs
         ts = linSpace t0 t1 n
