@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 
-module Differentiation ( dConst, dVar, dTake ) where
+module AD ( dConst, dVar, dTake ) where
 
 import Control.Applicative
 
