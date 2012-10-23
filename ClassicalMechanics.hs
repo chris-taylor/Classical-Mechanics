@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE OverloadedStrings, TypeFamilies #-}
 
 module ClassicalMechanics where
 
@@ -14,6 +14,20 @@ import Optimization
 import VectorSpace
 import Vector2
 import Vector3
+
+------------------------------
+-- Atomic variables
+------------------------------
+
+m, t, x, y, z, x', y', z' :: Expr
+m = "m"
+t = "t"
+x = "x"
+y = "y"
+z = "z"
+x' = "x'"
+y' = "y'"
+z' = "z'"
 
 ------------------------------
 -- Local coordinates
@@ -37,10 +51,10 @@ up :: Functor f => f (a -> b) -> a -> f b
 up fs t = fmap ($t) fs
 
 -- |Coordinate function.
---q :: Expr -> V3 Expr
---q = up $ V3 (literalFunction x)
---            (literalFunction y)
---            (literalFunction z)
+q :: Expr -> V3 Expr
+q = up $ V3 (literalFunction x)
+            (literalFunction y)
+            (literalFunction z)
 
 ------------------------------
 -- Local coordinate function
@@ -61,7 +75,7 @@ lFreeParticle mass local = 0.5 * mass * (dot v v)
 
 -- |Harmonic oscillator lagrandian. The user should supply a mass and a stiffness constant.
 lHarmonic :: (InnerSpace v, s ~ Scalar v, Fractional s) => s -> s -> Local v a -> s
-lHarmonic mass k local = 0.5 * mass * (dot v v) + 0.5 * k * (dot q q)
+lHarmonic mass k local = 0.5 * mass * (dot v v) - 0.5 * k * (dot q q)
     where q = position local
           v = velocity local
 
