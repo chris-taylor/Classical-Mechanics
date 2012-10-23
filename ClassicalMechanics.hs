@@ -7,6 +7,7 @@ import Prelude hiding (Real)
 
 import Expr
 import AD
+import Differentiation
 import Integration
 import Optimization
 
@@ -40,21 +41,6 @@ up fs t = fmap ($t) fs
 --q = up $ V3 (literalFunction x)
 --            (literalFunction y)
 --            (literalFunction z)
-
-------------------------------
--- Symbolic derivatives
-------------------------------
-
-class Differentiable a where
-    d :: (VectorSpace v, a ~ Scalar v) => (a -> v) -> a -> v
-
-instance Differentiable Double where
-    d f x = ( f(x+dx) <-> f(x-dx) ) </ (2 * dx)
-        where dx  = 1e-8
-
---instance Differentiable Expr where
---    d f x = fmap diffExpr $ f x
---            where diffExpr = atomE . modifyA ('D':) . getAtom
 
 ------------------------------
 -- Local coordinate function
