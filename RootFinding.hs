@@ -1,6 +1,6 @@
 {-# LANGUAGE BangPatterns #-}
 
-module RootFinding where
+module RootFinding ( Root(..), bisectionMethod ) where
 
 import Debug.Trace
 

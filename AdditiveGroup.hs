@@ -1,4 +1,4 @@
-module AdditiveGroup where
+module AdditiveGroup ( AdditiveGroup(..) ) where
 
 infixl 6 <+>
 infixl 6 <->

@@ -1,6 +1,4 @@
-{-# LANGUAGE BangPatterns #-}
-
-module Optimization where
+module Optimization ( minimize ) where
 
 import           Numeric.LinearAlgebra
 import qualified Numeric.GSL.Minimization as GSL

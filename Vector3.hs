@@ -1,9 +1,8 @@
 {-# LANGUAGE TypeFamilies, FlexibleContexts, UndecidableInstances #-}
 
-module Vector3 where
+module Vector3 ( V3(..) ) where
 
 import Control.Applicative hiding ((*>))
-import AdditiveGroup
 import VectorSpace
 
 data V3 a = V3 !a !a !a deriving (Eq,Ord)

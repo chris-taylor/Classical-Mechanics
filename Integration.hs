@@ -1,4 +1,4 @@
-module Integration where
+module Integration ( definiteIntegral ) where
 
 import Numeric.GSL.Integration
 

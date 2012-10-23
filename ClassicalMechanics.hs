@@ -10,7 +10,6 @@ import Differentiation
 import Integration
 import Optimization
 
-import AdditiveGroup
 import VectorSpace
 import Vector2
 import Vector3
@@ -41,10 +40,6 @@ up fs t = fmap ($t) fs
 --q = up $ V3 (literalFunction x)
 --            (literalFunction y)
 --            (literalFunction z)
-
--- |Create a literal symbolic function.
-literalFunction :: Expr -> Expr -> Expr
-literalFunction f expr = atomE $ App (getVar f) expr
 
 ------------------------------
 -- Symbolic derivatives
@@ -127,28 +122,34 @@ variedFreeParticleAction mass q nu t1 t2 epsilon =
     where
         eta = makeEta nu t1 t2
 
-parametricPathAction l t0 t1 qs = lagrangianAction l path t0 t1
-    where
-        path = makePath t0 t1 qs
+--parametricPathAction l t0 t1 qs = lagrangianAction l path t0 t1
+--    where
+--        path = makePath t0 t1 qs
 
-makePath :: (VectorSpace v, s ~ Scalar v, Fractional s, Ord s) => s -> s -> [v] -> (s -> v)
+--makePath :: (VectorSpace v, s ~ Scalar v, Fractional s, Ord s) => s -> s -> [v] -> (s -> v)
 makePath t0 t1 qs =
     let n  = length qs
         ts = linSpace t0 t1 n
      in linearInterpolation ts qs
 
-linSpace :: Fractional a => a -> a -> Int -> [a]
-linSpace lo hi n = map (\n -> lo + d * fromIntegral n) [0 .. n-1]
+linSpace :: (Fractional s) => s -> s -> Int -> [s]
+linSpace lo hi n = map (\n -> lo + fromIntegral n * dv) [0 .. n-1]
     where
         nr = fromIntegral (n - 1) 
-        d  = (hi - lo) / nr
+        dv = (1/nr) * (hi - lo)
 
-lagrangeInterpolation :: (Eq a, Fractional a) => [a] -> [a] -> a -> a
-lagrangeInterpolation xs ys x = sum $ zipWith (*) ys (map f xs)
+linSpaceV :: (VectorSpace v, s ~ Scalar v, Fractional s) => v -> v -> Int -> [v]
+linSpaceV lo hi n = map (\n -> lo <+> fromIntegral n *> dv) [0 .. n-1]
     where
-        f xj    = product $ map (p xj) xs
+        nr = fromIntegral (n - 1) 
+        dv = (1/nr) *> (hi <-> lo)
 
-        p xj xm = if xj == xm then 1 else (x - xm) / (xj - xm)
+--lagrangeInterpolation :: (Eq a, Fractional a) => [a] -> [a] -> a -> a
+--lagrangeInterpolation xs ys x = sum $ zipWith (*) ys (map f xs)
+--    where
+--        f xj    = product $ map (p xj) xs
+
+--        p xj xm = if xj == xm then 1 else (x - xm) / (xj - xm)
 
 linearInterpolation :: (VectorSpace v, s ~ Scalar v, Fractional s, Ord s) => [s] -> [v] -> s -> v
 linearInterpolation xs vs x = go (head xs) (head vs) (tail xs) (tail vs)

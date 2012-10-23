@@ -1,4 +1,4 @@
-module Latex where
+module Latex ( latexExpr ) where
 
 import Expr
 import qualified Data.Set as Set

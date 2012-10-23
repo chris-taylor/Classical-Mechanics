@@ -1,14 +1,12 @@
 {-# LANGUAGE OverloadedStrings, TypeFamilies #-}
 
-module Expr where
+module Expr ( Real, Var, Expr, literalFunction ) where
 
 import           GHC.Exts (IsString (..))
 import           Prelude hiding (Real)
 import qualified Data.Map  as Map
 import qualified Data.List as List
-
-import AdditiveGroup
-import VectorSpace
+import           VectorSpace
 
 type Real = Double
 type Var  = String
@@ -38,6 +36,12 @@ varE = atomE . Var
 -- Predicates/selectors for atoms
 ------------------------------
 
+varA :: Var -> Atom
+varA = Var
+
+appA :: Var -> Expr -> Atom
+appA = App
+
 isVarA :: Atom -> Bool
 isVarA (Var _) = True
 isVarA _       = False
@@ -64,6 +68,14 @@ modifyA g (App f e) = App (g f) e
 
 isConstP :: Prod -> Bool
 isConstP (Prod m) = Map.null m
+
+------------------------------
+-- Constructors for expressions
+------------------------------
+
+-- |Create a literal symbolic function.
+literalFunction :: Expr -> Expr -> Expr
+literalFunction f expr = atomE $ App (getVar f) expr
 
 ------------------------------
 -- Predicates/selectors for expressions

@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeFamilies #-}
 
-module VectorSpace where
+module VectorSpace ( AdditiveGroup(..), VectorSpace(..), InnerSpace(..), (</) ) where
 
 import AdditiveGroup
 
