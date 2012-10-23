@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 
-module AD ( dConst, dVar, dTake ) where
+module AD ( dConst, dVar, diff, diff', diffs ) where
 
 import Control.Applicative
 
@@ -119,8 +119,22 @@ instance Floating a => Floating (Dif a) where
     acosh = acosh >-< recip (- sqrt (sqr-1))
     atanh = atanh >-< recip (1-sqr)
 
-dTake :: Int -> Dif a -> [a]
-dTake 0 _               = []
-dTake n (D a Nothing)   = return a
-dTake n (D a (Just a')) = a : dTake (n-1) a'
+diff :: Num a => (Dif a -> Dif a) -> a -> a
+diff f x = let D a a' = f (dVar x)
+            in case a' of
+                Nothing      -> 0
+                Just (D b _) -> b
+
+diff' :: Num a => (Dif a -> Dif a) -> a -> (a, a)
+diff' f x = let D a a' = f (dVar x)
+             in case a' of
+                Nothing      -> (a, 0)
+                Just (D b _) -> (a, b)
+
+diffs :: Num a => (Dif a -> Dif a) -> a -> [a]
+diffs f x = diffs_ $ f (dVar x)
+
+diffs_ :: Dif a -> [a]
+diffs_ (D a Nothing)   = [a]
+diffs_ (D a (Just a')) = a : diffs_ a'
 
