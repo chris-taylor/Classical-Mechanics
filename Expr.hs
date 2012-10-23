@@ -1,12 +1,14 @@
 {-# LANGUAGE OverloadedStrings, TypeFamilies #-}
 
-module Expr ( Real, Var, Expr, literalFunction ) where
+module Expr ( Real, Var, Expr, literalFunction, varE, constE ) where
 
 import           GHC.Exts (IsString (..))
 import           Prelude hiding (Real)
 import qualified Data.Map  as Map
 import qualified Data.List as List
+
 import           VectorSpace
+import           Differentiation
 
 type Real = Double
 type Var  = String
@@ -218,16 +220,7 @@ instance VectorSpace Expr where
 instance InnerSpace Expr where
     dot = (*)
 
-------------------------------
--- Atomic variables
-------------------------------
-
-m, t, x, y, z, x', y', z' :: Expr
-m = "m"
-t = "t"
-x = "x"
-y = "y"
-z = "z"
-x' = "x'"
-y' = "y'"
-z' = "z'"
+instance Differentiable Expr where
+    d f x = fromList $ fmap diffExpr $ toList $ f x
+        where
+            diffExpr = atomE . modifyA ('d':) . getAtom
