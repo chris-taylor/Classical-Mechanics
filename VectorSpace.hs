@@ -19,6 +19,12 @@ class AdditiveGroup v => VectorSpace v where
     -- | Multiplication by a scalar on the left.
     (*>)  :: Scalar v -> v -> v 
 
+    -- | Convert vector to a list of scalars.
+    toList :: v -> [Scalar v]
+
+    -- | Build  a vector from a list.
+    fromList :: [Scalar v] -> v
+
 -- | Division by a scalar.
 (</) :: (VectorSpace v, s ~ Scalar v, Fractional s) => v -> s -> v
 v </ s = (1/s) *> v
@@ -34,22 +40,32 @@ class VectorSpace v => InnerSpace v where
 instance VectorSpace Int where
     type Scalar Int = Int
     (*>) = (*)
+    toList x = [x]
+    fromList = head
 
 instance VectorSpace Integer where
     type Scalar Integer = Integer
     (*>) = (*)
+    toList x = [x]
+    fromList = head
 
 instance VectorSpace Float where
     type Scalar Float = Float
     (*>) = (*)
+    toList x = [x]
+    fromList = head
 
 instance VectorSpace Double where
     type Scalar Double = Double
     (*>) = (*)
+    toList x = [x]
+    fromList = head
 
 instance VectorSpace b => VectorSpace (a -> b) where
     type Scalar (a -> b) = Scalar b
-    s *> v  = \a -> s *> v a
+    s *> v   = \a -> s *> v a
+    toList   = error "VectorSpace.toList not defined for functions"
+    fromList = error "VectorSpace.fromList not defined for functions"
 
 ------------------------------
 -- InnerSpace Instances

@@ -48,14 +48,18 @@ instance Floating a => Floating (V2 a) where
     acosh = liftA acosh
     atanh = liftA atanh
 
-instance AdditiveGroup a => AdditiveGroup (V2 a) where
-    zeroV   = V2 zeroV zeroV
-    (<+>)   = liftA2 (<+>)
-    negateV = liftA negateV
+instance Num a => AdditiveGroup (V2 a) where
+    zeroV   = V2 0 0
+    (<+>)   = liftA2 (+)
+    negateV = liftA negate
 
-instance VectorSpace v => VectorSpace (V2 v) where
-    type Scalar (V2 v) = Scalar v
-    s *> V2 a b = V2 (s *> a) (s *> b)
+instance Num v => VectorSpace (V2 v) where
+    type Scalar (V2 v) = v
 
-instance (InnerSpace v, AdditiveGroup (Scalar v)) => InnerSpace (V2 v) where
-    V2 a b `dot` V2 c d = a `dot` c <+> b `dot` d
+    s *> V2 a b = V2 (s * a) (s * b)
+
+    toList (V2 a b) = [a,b]
+    fromList [a,b]  = V2 a b
+
+instance Num v => InnerSpace (V2 v) where
+    V2 a b `dot` V2 c d = a * c + b * d
