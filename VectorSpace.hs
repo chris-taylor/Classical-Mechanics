@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeFamilies #-}
 
-module VectorSpace ( AdditiveGroup(..), VectorSpace(..), InnerSpace(..), (</) ) where
+module VectorSpace ( AdditiveGroup(..), VectorSpace(..), InnerSpace(..), (</), lenV ) where
 
 import AdditiveGroup
 
@@ -25,9 +25,13 @@ class AdditiveGroup v => VectorSpace v where
     -- | Build  a vector from a list.
     fromList :: [Scalar v] -> v
 
--- | Division by a scalar.
+-- |Division by a scalar.
 (</) :: (VectorSpace v, s ~ Scalar v, Fractional s) => v -> s -> v
 v </ s = (1/s) *> v
+
+-- |Length of a vector.
+lenV :: VectorSpace v => v -> Int
+lenV = length . toList
 
 -- |This class describes spaces with an inner product.
 class VectorSpace v => InnerSpace v where
