@@ -133,8 +133,7 @@ diff' f x = let D a a' = f (dVar x)
 
 diffs :: Num a => (Dif a -> Dif a) -> a -> [a]
 diffs f x = diffs_ $ f (dVar x)
-
-diffs_ :: Dif a -> [a]
-diffs_ (D a Nothing)   = [a]
-diffs_ (D a (Just a')) = a : diffs_ a'
+    where
+        diffs_ (D a Nothing)   = [a]
+        diffs_ (D a (Just a')) = a : diffs_ a'
 
