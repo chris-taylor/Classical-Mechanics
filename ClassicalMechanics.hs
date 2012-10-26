@@ -19,15 +19,13 @@ import Vector3
 -- Atomic variables
 ------------------------------
 
-m, t, x, y, z, x', y', z' :: Expr
+k, m, t, x, y, z :: Expr
+k = "k"
 m = "m"
 t = "t"
 x = "x"
 y = "y"
 z = "z"
-x' = "x'"
-y' = "y'"
-z' = "z'"
 
 ------------------------------
 -- Local coordinates
@@ -119,35 +117,75 @@ variedFreeParticleAction mass q nu t1 t2 epsilon =
     where
         eta = makeEta nu t1 t2
 
---parametricPathAction l t0 t1 qs = lagrangianAction l path t0 t1
---    where
---        path = makePath t0 t1 qs
+-- |Find an approximate solution path through configuration space by numerically minimizing the
+--action over a space of parametric paths with fixed initial and final points.
+findPath :: (VectorSpace v, Scalar v ~ Double) =>
+            (Local v Real -> Real)  -- lagrangian
+         -> Real                    -- initial time
+         -> v                       -- initial position
+         -> Real                    -- final time
+         -> v                       -- final position
+         -> Int                     -- no. of points on path
+         -> (Real -> v)             -- final path
+findPath lagrangian t0 q0 t1 q1 n =
+    let initialqs    = linSpaceV q0 q1 n
+        minimizingqs = multidimensionalMinimize func (pathToList initialqs)
+        func         = parametricPathAction lagrangian t0 q0 t1 q1 . listToPath
 
-makePath :: (VectorSpace v, s ~ Scalar v, Fractional s, Ord s) => s -> s -> [v] -> (s -> v)
-makePath t0 t1 qs =
+        pathToList   = concatMap toList
+        listToPath   = map fromList . cut (lenV q0)
+
+    in  makePath t0 q0 t1 q1 (listToPath minimizingqs)
+
+cut :: Int -> [a] -> [[a]]
+cut n [] = []
+cut n xs = take n xs : cut n (drop n xs)
+
+-- |Compute the action of a particle along a parametric path. The user should supply the lagrangian,
+--the initial and final times, and a list of sample points along the path to be integrated. A path
+--will be constructed by interpolating between the sample points, and the final action computed
+--by integrating over this path.
+parametricPathAction :: (VectorSpace v, Scalar v ~ Real) =>
+                        (Local v Real -> Real)  -- lagrangian
+                     -> Real                    -- initial time
+                     -> v                       -- initial position
+                     -> Real                    -- final time
+                     -> v                       -- final position
+                     -> [v]                     -- path
+                     -> Real                    -- action
+parametricPathAction l t0 q0 t1 q1 qs = lagrangianAction l path t0 t1
+    where
+        path = makePath t0 q0 t1 q1 qs
+
+-- |Given an initial and final time, and a list of points sampled equally along a path, create a
+--continuous path by interpolating between the sample points.
+makePath :: (VectorSpace v, s ~ Scalar v, Fractional s, Ord s) =>
+            s           -- initial time
+         -> v           -- initial position
+         -> s           -- final time
+         -> v           -- final position
+         -> [v]         -- intermediate path
+         -> (s -> v)    -- path
+makePath t0 q0 t1 q1 qs =
     let n  = length qs
         ts = linSpace t0 t1 n
-     in linearInterpolation ts qs
+     in linearInterpolation ([t0] ++ ts ++ [t1]) ([q0] ++ qs ++ [q1])
 
+-- |Return a list of @n@ linearly spaced points between @lo@ and @hi@.
 linSpace :: (Fractional s) => s -> s -> Int -> [s]
-linSpace lo hi n = map (\n -> lo + fromIntegral n * dv) [0 .. n-1]
+linSpace lo hi n = map (\n -> lo + fromIntegral n * dv) [1 .. n]
     where
-        nr = fromIntegral (n - 1) 
+        nr = fromIntegral (n + 1) 
         dv = (1/nr) * (hi - lo)
 
+-- |Return a list of @n@ vectors linearly spaced between @lo@ and @hi@.
 linSpaceV :: (VectorSpace v, s ~ Scalar v, Fractional s) => v -> v -> Int -> [v]
-linSpaceV lo hi n = map (\n -> lo <+> fromIntegral n *> dv) [0 .. n-1]
+linSpaceV lo hi n = map (\n -> lo <+> fromIntegral n *> dv) [1 .. n]
     where
-        nr = fromIntegral (n - 1) 
+        nr = fromIntegral (n + 1) 
         dv = (1/nr) *> (hi <-> lo)
 
---lagrangeInterpolation :: (Eq a, Fractional a) => [a] -> [a] -> a -> a
---lagrangeInterpolation xs ys x = sum $ zipWith (*) ys (map f xs)
---    where
---        f xj    = product $ map (p xj) xs
-
---        p xj xm = if xj == xm then 1 else (x - xm) / (xj - xm)
-
+-- |Return a path through a vector space using linear interpolation
 linearInterpolation :: (VectorSpace v, s ~ Scalar v, Fractional s, Ord s) => [s] -> [v] -> s -> v
 linearInterpolation xs vs x = go (head xs) (head vs) (tail xs) (tail vs)
     where
@@ -155,9 +193,22 @@ linearInterpolation xs vs x = go (head xs) (head vs) (tail xs) (tail vs)
             | x < x1 || null xs = linearInterp1 x0 v0 x1 v1 x
             | otherwise         = go x1 v1 xs vs
 
-linearInterp1 :: (VectorSpace v, s ~ Scalar v, Fractional s) => s -> v -> s -> v -> s -> v
-linearInterp1 t0 v0 t1 v1 t = c0 *> v0 <+> c1 *> v1
+        linearInterp1 t0 v0 t1 v1 t = c0 *> v0 <+> c1 *> v1
+            where
+                c0 = (t1 - t) / dt
+                c1 = (t - t0) / dt
+                dt = t1 - t0
+
+-- Parametric path for the harmonic oscillator using findPath.
+
+qHarmonicApprox :: Double -> Double
+qHarmonicApprox = findPath (lHarmonic 1.0 1.0) t0 q0 t1 q1 nPoints
     where
-        c0 = (t1 - t) / dt
-        c1 = (t - t0) / dt
-        dt = t1 - t0
+        t0      = 0.0
+        q0      = 1.0
+        t1      = pi / 2
+        q1      = 0.0
+        nPoints = 3
+
+qHarmonicExact :: Double -> Double
+qHarmonicExact = cos
