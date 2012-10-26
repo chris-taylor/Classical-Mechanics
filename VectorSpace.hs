@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeFamilies, FlexibleContexts #-}
 
-module VectorSpace ( AdditiveGroup(..), VectorSpace(..), (</), lenV ) where
+module VectorSpace ( AdditiveGroup(..), VectorSpace(..), (</), lenV, sumV ) where
 
 import AdditiveGroup
 
@@ -33,7 +33,12 @@ v </ s = (1/s) *> v
 lenV :: VectorSpace v => v -> Int
 lenV = length . toList
 
-
+-- |Sum of vectors.
+sumV :: VectorSpace v => [v] -> v
+sumV = go zeroV
+    where
+        go accum []     = accum
+        go accum (v:vs) = go (accum <+> v) vs 
 
 
 -- Primitive instances
