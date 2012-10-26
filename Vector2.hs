@@ -4,6 +4,7 @@ module Vector2 ( V2(..) ) where
 
 import Control.Applicative hiding ((*>))
 import VectorSpace
+import InnerSpace
 
 data V2 a = V2 !a !a deriving (Eq,Ord)
 

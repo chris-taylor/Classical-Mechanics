@@ -8,6 +8,7 @@ import qualified Data.Map  as Map
 import qualified Data.List as List
 
 import           VectorSpace
+import           InnerSpace
 import           Differentiation
 
 type Real = Double
