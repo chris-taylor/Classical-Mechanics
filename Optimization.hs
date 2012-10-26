@@ -14,7 +14,7 @@ minimize f xi = xopt where (xopt,_,_) = minimize' f xi
 minimize' :: (Double -> Double) -> Double -> (Double, Double, Int)
 minimize' f xi = (head xopt, f (head xopt), rows path)
     where
-        (xopt,path) = GSL.minimize GSL.NMSimplex 1e-10 1000 sizes (f . head) [xi]
+        (xopt,path) = GSL.minimize GSL.NMSimplex 1e-4 1000 sizes (f . head) [xi]
         sizes       = [1]
 
 -- |Minimize a function of multiple variables. The first argument is the
@@ -28,5 +28,5 @@ multidimensionalMinimize f xi = xopt where (xopt,_,_) = multidimensionalMinimize
 multidimensionalMinimize' :: ([Double] -> Double) -> [Double] -> ([Double], Double, Int)
 multidimensionalMinimize' f xi = (xopt, f xopt, rows path)
     where
-        (xopt,path) = GSL.minimize GSL.NMSimplex 1e-6 1000 sizes f xi
+        (xopt,path) = GSL.minimize GSL.NMSimplex 1e-4 1000 sizes f xi
         sizes       = replicate (length xi) 1
