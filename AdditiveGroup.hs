@@ -20,9 +20,7 @@ class AdditiveGroup v where
     negateV :: v -> v
     negateV v = zeroV <-> v
 
-------------------------------
--- Instances
-------------------------------
+-- Numeric instances
 
 instance AdditiveGroup Int where
     zeroV = 0
@@ -44,7 +42,21 @@ instance AdditiveGroup Double where
     (<+>) = (+)
     (<->) = (-)
 
+-- Function instance
+
 instance AdditiveGroup v => AdditiveGroup (a -> v) where
     zeroV   = const zeroV
     f <+> g = \a -> f a <+> g a
     f <-> g = \a -> f a <-> g a
+
+-- Tuple instances
+
+instance (AdditiveGroup g, AdditiveGroup h) => AdditiveGroup (g,h) where
+    zeroV           = (zeroV, zeroV)
+    (a,b) <+> (c,d) = (a <+> c, b <+> d)
+    (a,b) <-> (c,d) = (a <-> c, b <-> d)
+
+instance (AdditiveGroup g, AdditiveGroup h, AdditiveGroup i) => AdditiveGroup (g,h,i) where
+    zeroV               = (zeroV, zeroV, zeroV)
+    (a,b,c) <+> (d,e,f) = (a <+> d, b <+> e, c <+> f)
+    (a,b,c) <-> (d,e,f) = (a <-> d, b <-> e, c <-> f)
