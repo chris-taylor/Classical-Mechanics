@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeFamilies, FlexibleContexts #-}
 
-module Basis where
+module Basis ( HasBasis(..), Enumerable(..) ) where
 
 import Trio
 import Enumerable
