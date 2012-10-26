@@ -1,6 +1,6 @@
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeFamilies, FlexibleContexts #-}
 
-module VectorSpace ( AdditiveGroup(..), VectorSpace(..), InnerSpace(..), (</), lenV ) where
+module VectorSpace ( AdditiveGroup(..), VectorSpace(..), (</), lenV ) where
 
 import AdditiveGroup
 
@@ -33,13 +33,10 @@ v </ s = (1/s) *> v
 lenV :: VectorSpace v => v -> Int
 lenV = length . toList
 
--- |This class describes spaces with an inner product.
-class VectorSpace v => InnerSpace v where
-    dot :: v -> v -> Scalar v
 
-------------------------------
--- VectorSpace Instances
-------------------------------
+
+
+-- Primitive instances
 
 instance VectorSpace Int where
     type Scalar Int = Int
@@ -65,24 +62,30 @@ instance VectorSpace Double where
     toList x = [x]
     fromList = head
 
+-- Function instance
+
 instance VectorSpace b => VectorSpace (a -> b) where
     type Scalar (a -> b) = Scalar b
     s *> v   = \a -> s *> v a
     toList   = error "VectorSpace.toList not defined for functions"
     fromList = error "VectorSpace.fromList not defined for functions"
 
-------------------------------
--- InnerSpace Instances
-------------------------------
+-- Tuple instances
 
-instance InnerSpace Int where
-    dot = (*)
+instance (VectorSpace u, VectorSpace v, Scalar u ~ Scalar v) => VectorSpace (u,v) where
+    type Scalar (u,v) = Scalar u
 
-instance InnerSpace Integer where
-    dot = (*)
+    s *> (u,v) = (s *> u, s *> v)
 
-instance InnerSpace Float where
-    dot = (*)
+    toList   = undefined
+    fromList = undefined
 
-instance InnerSpace Double where
-    dot = (*)
+instance (VectorSpace u, VectorSpace v, VectorSpace w, Scalar u ~ Scalar v, Scalar v ~ Scalar w) => VectorSpace (u,v,w) where
+    type Scalar (u,v,w) = Scalar u
+
+    s *> (u,v,w) = (s *> u, s *> v, s *> w)
+
+    toList   = undefined
+    fromList = undefined
+
+
