@@ -12,6 +12,7 @@ import Integration
 import Optimization
 
 import VectorSpace
+import InnerSpace
 import Vector2
 import Vector3
 
@@ -212,3 +213,14 @@ qHarmonicApprox = findPath (lHarmonic 1.0 1.0) t0 q0 t1 q1 nPoints
 
 qHarmonicExact :: Double -> Double
 qHarmonicExact = cos
+
+-- |Definition of delta (ex 1.8). Note that u, v can be functions!
+delta :: (VectorSpace u, VectorSpace v, s ~ Scalar u, s ~ Scalar v, Fractional s) =>
+         u             -- path variation
+      -> (u -> t -> v) -- functional on paths
+      -> u             -- true path
+      -> t -> v        -- derivative of path
+delta eta f q t = ( (f (q <+> eps *> eta) <-> f q ) </ eps) t
+    where
+        eps = 1e-6
+
