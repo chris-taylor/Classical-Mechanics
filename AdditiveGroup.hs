@@ -1,4 +1,4 @@
-module AdditiveGroup ( AdditiveGroup(..), sumV ) where
+module AdditiveGroup ( AdditiveGroup(..), Sum(..), sumV ) where
 
 import Control.Applicative
 import Data.Monoid ( Monoid(..) )

@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeFamilies, FlexibleContexts #-}
 
-module VectorSpace ( module AdditiveGroup,  VectorSpace(..), (</), lenV ) where
+module VectorSpace ( module AdditiveGroup,  VectorSpace(..), (</), lenV, lerp, linearCombo ) where
 
 import AdditiveGroup
 
