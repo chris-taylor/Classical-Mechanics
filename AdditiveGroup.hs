@@ -20,6 +20,13 @@ class AdditiveGroup v where
     negateV :: v -> v
     negateV v = zeroV <-> v
 
+-- Trivial instance
+
+instance AdditiveGroup () where
+    zeroV     = ()
+    () <+> () = ()
+    () <-> () = ()
+
 -- Numeric instances
 
 instance AdditiveGroup Int where
