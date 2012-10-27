@@ -1,4 +1,8 @@
-module AdditiveGroup ( AdditiveGroup(..) ) where
+module AdditiveGroup ( AdditiveGroup(..), sumV ) where
+
+import Control.Applicative
+import Data.Monoid ( Monoid(..) )
+import Iso
 
 infixl 6 <+>
 infixl 6 <->
@@ -19,6 +23,13 @@ class AdditiveGroup v where
     -- | Additive inverse
     negateV :: v -> v
     negateV v = zeroV <-> v
+
+-- |Sum of vectors.
+sumV :: AdditiveGroup a => [a] -> a
+sumV = go zeroV
+    where
+        go accum []     = accum
+        go accum (v:vs) = go (accum <+> v) vs 
 
 -- Trivial instance
 
@@ -67,3 +78,26 @@ instance (AdditiveGroup g, AdditiveGroup h, AdditiveGroup i) => AdditiveGroup (g
     zeroV               = (zeroV, zeroV, zeroV)
     (a,b,c) <+> (d,e,f) = (a <+> d, b <+> e, c <+> f)
     (a,b,c) <-> (d,e,f) = (a <-> d, b <-> e, c <-> f)
+
+-- Sum type 
+
+-- |Sum data type. An alternative to the one in Data.Monoid that uses a @Num@
+--instance instead of an AdditiveGroup instance.
+data Sum a = Sum { getSum :: a } deriving (Eq,Ord,Read,Show,Bounded)
+
+instance Functor Sum where
+    fmap = inSum
+
+instance Applicative Sum where
+    pure  = Sum
+    (<*>) = inSum2 ($)
+
+instance AdditiveGroup a => Monoid (Sum a) where
+    mempty                = Sum zeroV
+    Sum a `mappend` Sum b = Sum (a <+> b)
+
+inSum :: (a -> b) -> (Sum a -> Sum b)
+inSum = getSum ~> Sum
+
+inSum2 :: (a -> b -> c) -> (Sum a -> Sum b -> Sum c)
+inSum2 = getSum ~> inSum
