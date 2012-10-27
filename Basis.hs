@@ -12,31 +12,30 @@ class (VectorSpace v, Enumerable (Basis v)) => HasBasis v where
     basisValue :: Basis v -> v
     coord      :: v -> Basis v -> Scalar v
 
+recompose :: (HasBasis v) => (Basis v -> Scalar v) -> v
+recompose f = sumV [ f e *> basisValue e | e <- enumerate ]
+
 -- Numeric instances
 
 instance HasBasis Int where
     type Basis Int = ()
-
-    basisValue () = 1
-    coord n () = n
+    basisValue ()  = 1
+    coord s ()     = s
 
 instance HasBasis Integer where
     type Basis Integer = ()
-
-    basisValue () = 1
-    coord n () = n
+    basisValue ()      = 1
+    coord s ()         = s
 
 instance HasBasis Float where
     type Basis Float = ()
-
-    basisValue () = 1
-    coord n () = n
+    basisValue ()    = 1
+    coord s ()       = s
 
 instance HasBasis Double where
     type Basis Double = ()
-
-    basisValue () = 1
-    coord n () = n
+    basisValue ()     = 1
+    coord s ()        = s
 
 -- Tuple instances
 
