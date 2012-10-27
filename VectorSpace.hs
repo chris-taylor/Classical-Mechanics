@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeFamilies, FlexibleContexts #-}
 
-module VectorSpace ( AdditiveGroup(..), VectorSpace(..), (</), lenV, sumV ) where
+module VectorSpace ( module AdditiveGroup,  VectorSpace(..), (</), lenV ) where
 
 import AdditiveGroup
 
@@ -33,13 +33,13 @@ v </ s = (1/s) *> v
 lenV :: VectorSpace v => v -> Int
 lenV = length . toList
 
--- |Sum of vectors.
-sumV :: VectorSpace v => [v] -> v
-sumV = go zeroV
-    where
-        go accum []     = accum
-        go accum (v:vs) = go (accum <+> v) vs 
+-- |Linear interpolation between two vectors.
+lerp :: (VectorSpace v) => v -> v -> Scalar v -> v
+lerp u v t = u <+> t *> (v <-> u)
 
+-- |Linear combination of vectors.
+linearCombo :: (VectorSpace v) => [(Scalar v,v)] -> v
+linearCombo ps = sumV [ s *> v | (s,v) <- ps ]
 
 -- Primitive instances
 
