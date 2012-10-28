@@ -1,8 +1,13 @@
 {-# LANGUAGE TypeOperators, TypeFamilies #-}
 
 --module LinearMap ( (:->), lapply, linear, Basis(..), VectorSpace (..) ) where
-module LinearMap ( (:->), lapply, idL, compose, lMap, unLMap, jsum, Basis(..), VectorSpace(..) ) where
+--module LinearMap ( (:->), linear, lapply, idL, compose, unLMap, jsum, HasBasis(..), VectorSpace(..) ) where
 
+module LinearMap where
+
+import Control.Applicative hiding ((*>), (<*))
+
+import Iso
 import Basis
 import VectorSpace
 
@@ -11,14 +16,6 @@ type MSum a = Maybe (Sum a)
 type LMap' u v = MSum (Basis u -> v)
 
 newtype u :-> v = LMap { unLMap :: LMap' u v }
-
-lMap = LMap
-
-atZ :: (AdditiveGroup b) => (a -> b) -> (MSum a -> b)
-atZ f = maybe zeroV (f . getSum)
-
-jsum :: a -> MSum a
-jsum = Just . Sum
 
 -- |Build a linear map from a function on vectors.
 linear :: (HasBasis u) => (u -> v) -> (u :-> v)
@@ -69,8 +66,40 @@ instance (HasBasis u, VectorSpace v,
     toList = undefined
     fromList = undefined
 
-----------
+---------- Convenience functions
 
+atZ :: (AdditiveGroup b) => (a -> b) -> (MSum a -> b)
+atZ f = maybe zeroV (f . getSum)
+
+jsum :: a -> MSum a
+jsum = Just . Sum
+
+inLMap :: (LMap' a b -> LMap' a' b') -> (a :-> b) -> (a' :-> b')
+inLMap = unLMap ~> LMap
+
+---------- Lift / Map etc for MSum
+
+-- |Lift a function over the 'MSum' type.
 liftMS :: (a -> b) -> MSum a -> MSum b
 liftMS = fmap . fmap
+
+-- |Lift a binary function over the 'MSum' type.
+liftMS2 :: (AdditiveGroup a, AdditiveGroup b) => (a -> b -> c) -> MSum a -> MSum b -> MSum c
+liftMS2 f ma mb = jsum $ f (fromMS ma) (fromMS mb)
+
+fromMS :: AdditiveGroup v => MSum v -> v
+fromMS Nothing        = zeroV
+fromMS (Just (Sum u)) = u
+
+---------- Lift / Map etc for Linear maps
+
+-- |Lift a linear function to each element of a linear map.
+liftL :: (Functor f, AdditiveGroup (f a)) =>
+         (a -> b) -> MSum (f a) -> MSum (f b)
+liftL = liftMS . fmap
+
+-- |Lift a binary linear function over a linear map.
+liftL2 :: (Applicative f, AdditiveGroup (f a), AdditiveGroup (f b)) =>
+          (a -> b -> c) -> MSum (f a) -> MSum (f b) -> MSum (f c)
+liftL2 = liftMS2 . liftA2
 
