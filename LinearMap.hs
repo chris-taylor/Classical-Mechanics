@@ -9,6 +9,8 @@ module LinearMap
     , inLMap
     , liftL
     , liftL2
+    , fmapL
+    , fmapL2
     , HasBasis (..)
     , VectorSpace (..)
     ) where
@@ -97,7 +99,7 @@ liftMS = fmap . fmap
 
 -- |Lift a binary function over the 'MSum' type.
 liftMS2 :: (AdditiveGroup a, AdditiveGroup b) => (a -> b -> c) -> MSum a -> MSum b -> MSum c
-liftMS2 f ma mb = jsum $ f (fromMS ma) (fromMS mb)
+liftMS2 f ma mb = jsum $ f (fromMS ma) (fromMS mb) -- doesn't optimize zeros!
 
 -- |Get a vector out of an 'MSum'.
 fromMS :: AdditiveGroup v => MSum v -> v
