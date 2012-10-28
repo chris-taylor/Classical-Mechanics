@@ -138,9 +138,6 @@ instance (HasBasis u, VectorSpace v, Scalar u ~ Scalar v,
 
     (*>) = distrib (*>)
 
-    toList   = noOp "toList"
-    fromList = noOp "fromList"
-
 instance (HasBasis u, InnerSpace v, Scalar u ~ Scalar v, VectorSpace (Scalar v),
           AdditiveGroup (Scalar v), Scalar (Scalar v) ~ Scalar v) => InnerSpace (u :> v) where
 
@@ -153,15 +150,15 @@ infix 0 >-< -- necessary for the Num, Fractional and Floating instances
 (f >-< df) (D u du) = D (f u) (fmapL (df u *>) du)
 
 instance (HasBasis a, Scalar a ~ Scalar v,
-          VectorSpace v, Num v) => Num (a :> v) where
+          VectorSpace v, v ~ Scalar v, Num v) => Num (a :> v) where
     fromInteger = constD . fromInteger
 
     (+) = (<+>)
     (-) = (<->)
     (*) = distrib (*)
 
-    signum = noOp "signum"
-    abs    = noOp "abs"
+    signum = signum >-< abs
+    abs    = abs    >-< const 0
 
 sqr x = x * x
 

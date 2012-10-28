@@ -73,9 +73,6 @@ instance (HasBasis u, VectorSpace v,
     s *> LMap Nothing = LMap Nothing
     s *> a            = linear (\u -> s *> lapply a u)
 
-    toList = undefined
-    fromList = undefined
-
 ---------- Convenience functions
 
 atZ :: (AdditiveGroup b) => (a -> b) -> (MSum a -> b)
