@@ -1,9 +1,17 @@
 {-# LANGUAGE TypeOperators, TypeFamilies #-}
 
---module LinearMap ( (:->), lapply, linear, Basis(..), VectorSpace (..) ) where
---module LinearMap ( (:->), linear, lapply, idL, compose, unLMap, jsum, HasBasis(..), VectorSpace(..) ) where
-
-module LinearMap where
+module LinearMap
+    ( (:->)
+    , linear
+    , lapply
+    , idL
+    , compose
+    , inLMap
+    , liftL
+    , liftL2
+    , HasBasis (..)
+    , VectorSpace (..)
+    ) where
 
 import Control.Applicative hiding ((*>), (<*))
 
@@ -77,6 +85,10 @@ jsum = Just . Sum
 inLMap :: (LMap' a b -> LMap' a' b') -> (a :-> b) -> (a' :-> b')
 inLMap = unLMap ~> LMap
 
+inLMap2 :: (LMap' a b -> LMap' a' b' -> LMap' a'' b'')
+        -> (a :-> b) -> (a' :-> b') -> (a'' :-> b'')
+inLMap2 = unLMap ~> inLMap
+
 ---------- Lift / Map etc for MSum
 
 -- |Lift a function over the 'MSum' type.
@@ -87,6 +99,7 @@ liftMS = fmap . fmap
 liftMS2 :: (AdditiveGroup a, AdditiveGroup b) => (a -> b -> c) -> MSum a -> MSum b -> MSum c
 liftMS2 f ma mb = jsum $ f (fromMS ma) (fromMS mb)
 
+-- |Get a vector out of an 'MSum'.
 fromMS :: AdditiveGroup v => MSum v -> v
 fromMS Nothing        = zeroV
 fromMS (Just (Sum u)) = u
@@ -103,3 +116,12 @@ liftL2 :: (Applicative f, AdditiveGroup (f a), AdditiveGroup (f b)) =>
           (a -> b -> c) -> MSum (f a) -> MSum (f b) -> MSum (f c)
 liftL2 = liftMS2 . liftA2
 
+-- |Map a function over a linear map.
+fmapL :: (AdditiveGroup b) =>
+         (b -> c) -> (a :-> b) -> (a :-> c)
+fmapL = inLMap . liftL
+
+-- |Map a binary function over a linear map.
+fmapL2 :: (AdditiveGroup b, AdditiveGroup c) =>
+          (b -> c -> d) -> (a :-> b) -> (a :-> c) -> a :-> d
+fmapL2 = inLMap2 . liftL2
