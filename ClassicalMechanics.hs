@@ -11,6 +11,7 @@ import Differentiation
 import Integration
 import Optimization
 
+import Basis
 import VectorSpace
 import InnerSpace
 import Vector2
@@ -59,7 +60,7 @@ q = up $ V3 (literalFunction x)
 -- Local coordinate function
 ------------------------------
 
-gamma :: (VectorSpace v, s ~ Scalar v, Differentiable s) => (s -> v) -> s -> Local v s
+gamma :: (HasBasis v, s ~ Scalar v, Differentiable s) => (s -> v) -> s -> Local v s
 gamma q t = Local t (q t) (d q t)
 
 ------------------------------
@@ -82,7 +83,7 @@ lHarmonic mass k local = 0.5 * mass * (dot v v) - 0.5 * k * (dot q q)
 -- Lagrangian action function
 ------------------------------
 
-lagrangianAction :: (VectorSpace v, Scalar v ~ Real) =>
+lagrangianAction :: (HasBasis v, Scalar v ~ Real) =>
                     (Local v Real -> Real)  -- lagrangian
                  -> (Real -> v)             -- particle path
                  -> Real                    -- initial time
@@ -105,7 +106,7 @@ makeEta nu t1 t2 t = ( (t - t1) * (t - t2) ) *> nu t
 
 ---- |Compute the action of a free particle integrated over a variational path. The first path
 ----supplied is the 'base' path and the second is the variation.
-variedFreeParticleAction :: (InnerSpace v, Scalar v ~ Double) =>
+variedFreeParticleAction :: (HasBasis v, InnerSpace v, Scalar v ~ Double) =>
                             Real          -- particle mass
                          -> (Real -> v)   -- path through configuration space
                          -> (Real -> v)   -- function to build deviation
@@ -120,7 +121,7 @@ variedFreeParticleAction mass q nu t1 t2 epsilon =
 
 -- |Find an approximate solution path through configuration space by numerically minimizing the
 --action over a space of parametric paths with fixed initial and final points.
-findPath :: (VectorSpace v, Scalar v ~ Double) =>
+findPath :: (HasBasis v, Scalar v ~ Double) =>
             (Local v Real -> Real)  -- lagrangian
          -> Real                    -- initial time
          -> v                       -- initial position
@@ -133,8 +134,8 @@ findPath lagrangian t0 q0 t1 q1 n =
         minimizingqs = multidimensionalMinimize func (pathToList initialqs)
         func         = parametricPathAction lagrangian t0 q0 t1 q1 . listToPath
 
-        pathToList   = concatMap toList
-        listToPath   = map fromList . cut (lenV q0)
+        pathToList   = concatMap toCoords
+        listToPath   = map fromCoords . cut (dim q0)
 
     in  makePath t0 q0 t1 q1 (listToPath minimizingqs)
 
@@ -146,7 +147,7 @@ cut n xs = take n xs : cut n (drop n xs)
 --the initial and final times, and a list of sample points along the path to be integrated. A path
 --will be constructed by interpolating between the sample points, and the final action computed
 --by integrating over this path.
-parametricPathAction :: (VectorSpace v, Scalar v ~ Real) =>
+parametricPathAction :: (HasBasis v, Scalar v ~ Real) =>
                         (Local v Real -> Real)  -- lagrangian
                      -> Real                    -- initial time
                      -> v                       -- initial position

@@ -1,6 +1,11 @@
 {-# LANGUAGE TypeFamilies, FlexibleContexts #-}
 
-module VectorSpace ( module AdditiveGroup,  VectorSpace(..), (</), lenV, lerp, linearCombo ) where
+module VectorSpace
+    ( module AdditiveGroup
+    , VectorSpace(..)
+    , (</)
+    , lerp
+    , linearCombo ) where
 
 import AdditiveGroup
 
@@ -19,19 +24,9 @@ class AdditiveGroup v => VectorSpace v where
     -- | Multiplication by a scalar on the left.
     (*>)  :: Scalar v -> v -> v 
 
-    -- | Convert vector to a list of scalars.
-    toList :: v -> [Scalar v]
-
-    -- | Build  a vector from a list.
-    fromList :: [Scalar v] -> v
-
 -- |Division by a scalar.
 (</) :: (VectorSpace v, s ~ Scalar v, Fractional s) => v -> s -> v
 v </ s = (1/s) *> v
-
--- |Length of a vector.
-lenV :: VectorSpace v => v -> Int
-lenV = length . toList
 
 -- |Linear interpolation between two vectors.
 lerp :: (VectorSpace v) => v -> v -> Scalar v -> v
@@ -46,34 +41,24 @@ linearCombo ps = sumV [ s *> v | (s,v) <- ps ]
 instance VectorSpace Int where
     type Scalar Int = Int
     (*>) = (*)
-    toList x = [x]
-    fromList = head
 
 instance VectorSpace Integer where
     type Scalar Integer = Integer
     (*>) = (*)
-    toList x = [x]
-    fromList = head
 
 instance VectorSpace Float where
     type Scalar Float = Float
     (*>) = (*)
-    toList x = [x]
-    fromList = head
 
 instance VectorSpace Double where
     type Scalar Double = Double
     (*>) = (*)
-    toList x = [x]
-    fromList = head
 
 -- Function instance
 
 instance VectorSpace b => VectorSpace (a -> b) where
     type Scalar (a -> b) = Scalar b
     s *> v   = \a -> s *> v a
-    toList   = error "VectorSpace.toList not defined for functions"
-    fromList = error "VectorSpace.fromList not defined for functions"
 
 -- Tuple instances
 
@@ -82,15 +67,9 @@ instance (VectorSpace u, VectorSpace v, Scalar u ~ Scalar v) => VectorSpace (u,v
 
     s *> (u,v) = (s *> u, s *> v)
 
-    toList   = undefined
-    fromList = undefined
-
 instance (VectorSpace u, VectorSpace v, VectorSpace w, Scalar u ~ Scalar v, Scalar v ~ Scalar w) => VectorSpace (u,v,w) where
     type Scalar (u,v,w) = Scalar u
 
     s *> (u,v,w) = (s *> u, s *> v, s *> w)
-
-    toList   = undefined
-    fromList = undefined
 
 

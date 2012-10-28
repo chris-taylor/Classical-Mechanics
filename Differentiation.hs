@@ -2,11 +2,12 @@
 
 module Differentiation where
 
+import Basis
 import VectorSpace
 
 -- |Class for differentiable types.
 class Differentiable a where
-    d :: (VectorSpace v, a ~ Scalar v) => (a -> v) -> a -> v
+    d :: (HasBasis v, a ~ Scalar v) => (a -> v) -> a -> v
 
 instance Differentiable Float where
     d f x = ( f(x+dx) <-> f(x-dx) ) </ (2 * dx)

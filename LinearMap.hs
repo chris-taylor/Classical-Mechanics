@@ -39,7 +39,7 @@ lapply = atZ lapply' . unLMap
 -- |Helper function, useful for lapply.
 lapply' :: (HasBasis u, Scalar u ~ Scalar v,
             VectorSpace v) => (Basis u -> v) -> (u -> v)
-lapply' m u = linearCombo [ (coord u e, m e) | e <- enumerate ]
+lapply' m u = linearCombo [ (decompose u e, m e) | e <- enumerate ]
 
 -- |Identity map.
 idL :: (HasBasis v) => v :-> v

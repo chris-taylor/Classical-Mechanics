@@ -31,13 +31,6 @@ sumV = go zeroV
         go accum []     = accum
         go accum (v:vs) = go (accum <+> v) vs 
 
--- Trivial instance
-
-instance AdditiveGroup () where
-    zeroV     = ()
-    () <+> () = ()
-    () <-> () = ()
-
 -- Numeric instances
 
 instance AdditiveGroup Int where
@@ -68,6 +61,11 @@ instance AdditiveGroup v => AdditiveGroup (a -> v) where
     f <-> g = \a -> f a <-> g a
 
 -- Tuple instances
+
+instance AdditiveGroup () where
+    zeroV     = ()
+    () <+> () = ()
+    () <-> () = ()
 
 instance (AdditiveGroup g, AdditiveGroup h) => AdditiveGroup (g,h) where
     zeroV           = (zeroV, zeroV)

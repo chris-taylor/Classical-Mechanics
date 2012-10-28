@@ -7,6 +7,7 @@ import           Prelude hiding (Real)
 import qualified Data.Map  as Map
 import qualified Data.List as List
 
+import           Basis
 import           VectorSpace
 import           InnerSpace
 import           Differentiation
@@ -215,13 +216,10 @@ instance VectorSpace Expr where
 
     (*>) = (*)
 
-    toList x = [x]
-    fromList [x] = x
-
 instance InnerSpace Expr where
     dot = (*)
 
 instance Differentiable Expr where
-    d f x = fromList $ fmap diffExpr $ toList $ f x
+    d f x = fromCoords . fmap diffExpr . toCoords $ f x
         where
             diffExpr = atomE . modifyA ('d':) . getAtom

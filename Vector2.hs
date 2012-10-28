@@ -61,9 +61,6 @@ instance Num a => VectorSpace (V2 a) where
 
     s *> V2 a b = V2 (s * a) (s * b)
 
-    toList (V2 a b) = [a,b]
-    fromList [a,b]  = V2 a b
-
 instance Num a => InnerSpace (V2 a) where
     V2 a b `dot` V2 a' b' = a * a' + b * b'
 
@@ -74,4 +71,4 @@ instance Num a => HasBasis (V2 a) where
     type Basis (V2 a) = V2 a
 
     basisValue = id
-    coord v e = dot v e
+    decompose  = dot
