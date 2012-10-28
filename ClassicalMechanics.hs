@@ -6,7 +6,7 @@ import Control.Applicative hiding ((*>), (<*))
 import Prelude hiding (Real)
 
 import Expr
-import AD
+import AD2
 import Differentiation
 import Integration
 import Optimization
