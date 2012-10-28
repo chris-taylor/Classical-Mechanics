@@ -3,6 +3,8 @@
 module Vector2 ( V2(..) ) where
 
 import Control.Applicative hiding ((*>))
+
+import Basis
 import VectorSpace
 import InnerSpace
 
@@ -54,13 +56,22 @@ instance Num a => AdditiveGroup (V2 a) where
     (<+>)   = liftA2 (+)
     negateV = liftA negate
 
-instance Num v => VectorSpace (V2 v) where
-    type Scalar (V2 v) = v
+instance Num a => VectorSpace (V2 a) where
+    type Scalar (V2 a) = a
 
     s *> V2 a b = V2 (s * a) (s * b)
 
     toList (V2 a b) = [a,b]
     fromList [a,b]  = V2 a b
 
-instance Num v => InnerSpace (V2 v) where
-    V2 a b `dot` V2 c d = a * c + b * d
+instance Num a => InnerSpace (V2 a) where
+    V2 a b `dot` V2 a' b' = a * a' + b * b'
+
+instance Num a => Enumerable (V2 a) where
+    enumerate = [ V2 1 0, V2 0 1 ]
+
+instance Num a => HasBasis (V2 a) where
+    type Basis (V2 a) = V2 a
+
+    basisValue = id
+    coord v e = dot v e
