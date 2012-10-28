@@ -219,6 +219,12 @@ instance VectorSpace Expr where
 instance InnerSpace Expr where
     dot = (*)
 
+instance HasBasis Expr where
+    type Basis Expr = ()
+
+    basisValue _ = 1
+    decompose x  = const x
+
 instance Differentiable Expr where
     d f x = fromCoords . fmap diffExpr . toCoords $ f x
         where
