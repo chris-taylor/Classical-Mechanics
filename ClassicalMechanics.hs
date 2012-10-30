@@ -1,4 +1,5 @@
-{-# LANGUAGE OverloadedStrings, TypeFamilies, TypeOperators #-}
+{-# LANGUAGE OverloadedStrings, TypeFamilies, TypeOperators,
+             FlexibleContexts, UndecidableInstances, StandaloneDeriving #-}
 
 module ClassicalMechanics where
 
@@ -39,16 +40,25 @@ z' = "dz"
 -- Local coordinates
 ------------------------------
 
-data Local v a = Local !a !v !v deriving (Eq,Show)
+data Local v = Local !(Scalar v) !v !v
 
-time :: Local v a -> a
+deriving instance (Eq v, Eq (Scalar v))     => Eq (Local v)
+deriving instance (Ord v, Ord (Scalar v))   => Ord (Local v)
+deriving instance (Show v, Show (Scalar v)) => Show (Local v)
+
+time :: Local v -> Scalar v
 time (Local t _ _) = t
 
-position :: Local v a -> v
+position :: Local v -> v
 position (Local _ pos _) = pos
 
-velocity :: Local v a -> v
+velocity :: Local v -> v
 velocity (Local _ _ vel) = vel
+
+-- this requires UndecidableInstances - can I get rid of that?
+--instance (Show v, Show (Scalar v)) => Show (Local v) where
+--    showsPrec _ (Local t x v) = showString "Local " . shows t . showString " " .
+--                                shows x . showString " " . shows v
 
 --coord = Local t (V3 x y z) (V3 x' y' z')
 
@@ -66,7 +76,7 @@ q = up $ V3 (literalFunction x)
 -- Local coordinate function
 ------------------------------
 
-gamma :: (HasBasis v, s ~ Scalar v, Differentiable s) => (s -> v) -> s -> Local v s
+gamma :: (HasBasis v, Differentiable (Scalar v)) => (Scalar v -> v) -> Scalar v -> Local v
 gamma q t = Local t (q t) (d q t)
 
 ------------------------------
@@ -75,7 +85,7 @@ gamma q t = Local t (q t) (d q t)
 
 -- |Free particle Lagrangian. The user should supply a mass and a 'local tuple' consisting of time,
 --position and velocity.
-lFreeParticle :: (InnerSpace v, s ~ Scalar v, Fractional s) => s -> Local v a -> s
+lFreeParticle :: (InnerSpace v, Fractional (Scalar v)) => Scalar v -> Local v -> Scalar v
 lFreeParticle mass local = 0.5 * mass * (dot v v)
     where v = velocity local
 
@@ -84,7 +94,7 @@ lFreeParticle mass local = 0.5 * mass * (dot v v)
 ------------------------------
 
 -- |Harmonic oscillator lagrandian. The user should supply a mass and a stiffness constant.
-lHarmonic :: (InnerSpace v, s ~ Scalar v, Fractional s) => s -> s -> Local v a -> s
+lHarmonic :: (InnerSpace v, Fractional (Scalar v)) => Scalar v -> Scalar v -> Local v -> Scalar v
 lHarmonic mass k local = 0.5 * mass * (dot v v) - 0.5 * k * (dot q q)
     where q = position local
           v = velocity local
@@ -94,7 +104,7 @@ lHarmonic mass k local = 0.5 * mass * (dot v v) - 0.5 * k * (dot q q)
 ------------------------------
 
 lagrangianAction :: (HasBasis v, Scalar v ~ Real) =>
-                    (Local v Real -> Real)  -- lagrangian
+                    (Local v -> Real)       -- lagrangian
                  -> (Real -> v)             -- particle path
                  -> Real                    -- initial time
                  -> Real                    -- final time
@@ -131,8 +141,8 @@ variedFreeParticleAction mass q nu t1 t2 epsilon =
 
 -- |Find an approximate solution path through configuration space by numerically minimizing the
 --action over a space of parametric paths with fixed initial and final points.
-findPath :: (HasBasis v, Scalar v ~ Double) =>
-            (Local v Real -> Real)  -- lagrangian
+findPath :: (HasBasis v, Scalar v ~ Real) =>
+            (Local v -> Real)       -- lagrangian
          -> Real                    -- initial time
          -> v                       -- initial position
          -> Real                    -- final time
@@ -158,7 +168,7 @@ cut n xs = take n xs : cut n (drop n xs)
 --will be constructed by interpolating between the sample points, and the final action computed
 --by integrating over this path.
 parametricPathAction :: (HasBasis v, Scalar v ~ Real) =>
-                        (Local v Real -> Real)  -- lagrangian
+                        (Local v -> Real)       -- lagrangian
                      -> Real                    -- initial time
                      -> v                       -- initial position
                      -> Real                    -- final time
@@ -258,19 +268,19 @@ derivAtBasis f x = (value f'df, map (deriv f'df . basisValue) enumerate)
 
 
 
-local0 :: Local (V3 Expr :> V3 Expr) (V3 Expr :> Expr)
+local0 :: Local (V3 Expr :> V3 Expr)
 local0 = Local (constD t) (constD (V3 x y z)) (constD (V3 x' y' z'))
 
-local1 :: Local (V3 Expr :> V3 Expr) (V3 Expr :> Expr)
+local1 :: Local (V3 Expr :> V3 Expr)
 local1 = Local (constD t) (idD (V3 x y z)) (constD (V3 x' y' z'))
 
-local2 :: Local (V3 Expr :> V3 Expr) (V3 Expr :> Expr)
+local2 :: Local (V3 Expr :> V3 Expr)
 local2 = Local (constD t) (constD (V3 x y z)) (idD (V3 x' y' z'))
 
-lagrangian1 :: Local (V3 Expr :> V3 Expr) (V3 Expr :> Expr) -> V3 Expr :> Expr
+lagrangian1 :: Local (V3 Expr :> V3 Expr) -> V3 Expr :> Expr
 lagrangian1 = lFreeParticle (constD m)
 
-lagrangian2 :: Local (V3 Expr :> V3 Expr) (V3 Expr :> Expr) -> V3 Expr :> Expr
+lagrangian2 :: Local (V3 Expr :> V3 Expr) -> V3 Expr :> Expr
 lagrangian2 = lHarmonic (constD m) (constD k)
 
 test :: (Expr, V3 Expr)
