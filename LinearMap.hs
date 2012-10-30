@@ -65,6 +65,9 @@ instance (HasBasis u, VectorSpace v,
     a            <+> LMap Nothing = a
     a            <+> b            = linear (\u -> lapply a u <+> lapply b u)
 
+    negateV (LMap Nothing) = LMap Nothing
+    negateV a              = linear (negateV . lapply a)
+
 instance (HasBasis u, VectorSpace v,
           Scalar u ~ Scalar v) => VectorSpace (u :-> v) where
     
