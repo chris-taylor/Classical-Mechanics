@@ -45,41 +45,67 @@ instance Floating b => Floating (a -> b) where
 -- AD Types
 ------------------------------
 
--- |Type encapsulating both value and derivative.
+-- |Consider a function @f@ of type @a -> b@. Evaluating it at a point @x :: a@ gives a return
+--value of type @b@. The derivative of @f@ evaluated at @x@ is a linear map of type @a :-> b@.
+--The derivative object holds both the value of the function (in the field 'value') and the linear
+--map representing the derivative (in the field 'derivative'). The types @a@ and @b@ remember
+--the domain and range of the function we started with.
 data a :> b = D { value :: b, derivative :: a :-> b }
+
+--Lazy infinite derivative towers would have the following type-
+--data a :> b = D { value :: b, derivative :: a :-> (a :> b) }
 
 -- |Type of differentiable functions.
 type a :~> b = a -> (a :> b)
 
+
+------------------------------
+-- AD Functions
+------------------------------
+
+
 showsD :: Show b => (a :> b) -> ShowS
 showsD (D val _) = showString "D " . shows val . showString " ..."
 
---data a :> b = D { value :: b, derivative :: a :-> (a :> b) }
-
-noOp :: String -> a
-noOp op = error (op ++ " not defined on a :> b")
+constD :: (HasBasis a, VectorSpace b, Scalar a ~ Scalar b) => b -> (a :> b)
+constD b = D b zeroV
 
 --constD :: b -> a :> b
 --constD :: (HasBasis a, VectorSpace (a :> b),
 --           Scalar a ~ Scalar (a :> b)) => b -> a :> b
-constD b = D b zeroV
 
---fmapD :: (b -> c) -> (a :> b) -> (a :> c)
-fmapD :: (AdditiveGroup b) => (b -> c) -> (a :> b) -> (a :> c)
-fmapD f (D a0 a') = D (f a0) (fmapL f a')
+
+
+-- |Given a *linear* function, create a differentiable function from it. The derivative is simply
+--the original function, converted to a linear map.
+linearD :: HasBasis a => (a -> b) -> (a :~> b)
+linearD f = \u -> D (f u) d
+    where
+        d = linear f
 
 --linearD :: (HasBasis a, VectorSpace (a :> b),
 --            Scalar a ~ Scalar (a :> b)) => (a -> b) -> a -> a :> b
 --linearD f = \u -> D (f u) d
 --    where
 --        d = linear (constD . f)
-linearD :: HasBasis a => (a -> b) -> (a :~> b)
-linearD f = \u -> D (f u) d
-    where
-        d = linear f
 
+
+
+-- |A differentiable identity function, e.g.
+--
+--  >>> f = idD 2.0
+--
+--Now @value f@ is @2.0@ and @derivative f@ is the identity function (ie a constant).
 idD :: (HasBasis a) => (a :~> a)
 idD = linearD id
+
+
+
+-- |Map a *linear* function over a derivative.
+fmapD :: (AdditiveGroup b) => (b -> c) -> (a :> b) -> (a :> c)
+fmapD f (D a0 a') = D (f a0) (fmapL f a')
+
+
 
 fstD :: (HasBasis a, HasBasis b, Scalar a ~ Scalar b) => (a, b) :~> a
 fstD x = linearD fst x
@@ -87,32 +113,46 @@ fstD x = linearD fst x
 sndD :: (HasBasis a, HasBasis b, Scalar a ~ Scalar b) => (a, b) :~> b
 sndD x = linearD snd x
 
-(><) :: (HasBasis a, Scalar a ~ Scalar b,
-         HasBasis b, Scalar b ~ Scalar c,
-         VectorSpace c)
-        => (b -> c) -> (b -> (b :-> c)) -> (a :> b) -> (a :> c)
+--(><) :: (HasBasis a, Scalar a ~ Scalar b,
+--         HasBasis b, Scalar b ~ Scalar c,
+--         VectorSpace c)
+--        => (b -> c) -> (b -> (b :-> c)) -> (a :> b) -> (a :> c)
+--(g >< dg) (D fx dfx) = D (g fx) (dg fx `compose` dfx)
 
-(g >< dg) (D fx dfx) = D (g fx) (dg fx `compose` dfx)
-
+-- |Useful for operators which distribute over addition (e.g. multiplication in the 'Num' class or
+-- multiplication by a scalar in the 'VectorSpace' class).
 distrib :: (AdditiveGroup a, AdditiveGroup b,
             HasBasis u, Scalar u ~ Scalar v,
-            VectorSpace v) =>
-     (a -> b -> v) -> (u :> a) -> (u :> b) -> u :> v
-
+            VectorSpace v) => (a -> b -> v) -> (u :> a) -> (u :> b) -> u :> v
 distrib op (D u0 u') (D v0 v') =
     D (u0 `op` v0) ( (fmapL (`op` v0) u') <+> (fmapL (u0 `op`) v') )
 
-deriv :: (HasBasis u, Scalar u ~ Scalar v, VectorSpace v)
-      => (u :> v) -> u -> v
+-- |Apply the derivative map to a vector.
+deriv :: (HasBasis u, Scalar u ~ Scalar v, VectorSpace v) => (u :> v) -> u -> v
 deriv = lapply . derivative
 
-derivV :: (HasBasis u, Scalar u ~ Scalar v, VectorSpace v)
-       => (u :> v) -> u -> (v, v)
-derivV d x = (value d, deriv d x)
+-- |Return the value of a function at a point, and its derivative applied to a vector.
+deriv' :: (HasBasis u, Scalar u ~ Scalar v, VectorSpace v) => (u :> v) -> u -> (v, v)
+deriv' d x = (value d, deriv d x)
 
-diff f x = deriv (f (idD x)) x
+diff f x y = deriv (f (idD x)) y
 
-diffV f x = derivV (f (idD x)) x
+diff' f x y = deriv' (f (idD x)) y
+
+
+
+
+
+---------- Utility functions
+
+-- Useful for unimplement(ed/able) functionality (eg in Eq class)
+noOp :: String -> a
+noOp op = error (op ++ " not defined on a :> b")
+
+
+
+
+
 
 ---------- Instances
 
