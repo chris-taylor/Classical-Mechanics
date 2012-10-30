@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, TypeFamilies #-}
+{-# LANGUAGE OverloadedStrings, TypeFamilies, TypeOperators #-}
 
 module ClassicalMechanics where
 
@@ -21,13 +21,19 @@ import Vector3
 -- Atomic variables
 ------------------------------
 
-k, m, t, x, y, z :: Expr
+k, m, t, x, y, z, x', y', z' :: Expr
+
 k = "k"
 m = "m"
 t = "t"
+
 x = "x"
 y = "y"
 z = "z"
+
+x' = "dx"
+y' = "dy"
+z' = "dz"
 
 ------------------------------
 -- Local coordinates
@@ -64,7 +70,7 @@ gamma :: (HasBasis v, s ~ Scalar v, Differentiable s) => (s -> v) -> s -> Local 
 gamma q t = Local t (q t) (d q t)
 
 ------------------------------
--- Free particle
+-- Free particle lagrangian
 ------------------------------
 
 -- |Free particle Lagrangian. The user should supply a mass and a 'local tuple' consisting of time,
@@ -72,6 +78,10 @@ gamma q t = Local t (q t) (d q t)
 lFreeParticle :: (InnerSpace v, s ~ Scalar v, Fractional s) => s -> Local v a -> s
 lFreeParticle mass local = 0.5 * mass * (dot v v)
     where v = velocity local
+
+------------------------------
+-- Harmonic oscillator lagrangian
+------------------------------
 
 -- |Harmonic oscillator lagrandian. The user should supply a mass and a stiffness constant.
 lHarmonic :: (InnerSpace v, s ~ Scalar v, Fractional s) => s -> s -> Local v a -> s
@@ -225,3 +235,44 @@ delta eta f q t = ( (f (q <+> eps *> eta) <-> f q ) </ eps) t
     where
         eps = 1e-6
 
+--------------- playground
+
+
+f :: InnerSpace v => v -> Scalar v
+f v = dot v v
+
+v1 :: V3 Expr
+v1 = V3 x y z
+
+v2 :: V3 Double
+v2 = V3 1.0 2.0 3.0
+
+derivAtBasis :: (HasBasis a, HasBasis b, VectorSpace c, Scalar b ~ Scalar c) => ((a :> a) -> (b :> c)) -> a -> (c, [c])
+derivAtBasis f x = (value f'df, map (deriv f'df . basisValue) enumerate)
+    where
+        f'df = f (idD x)
+
+
+
+
+
+
+
+local0 :: Local (V3 Expr :> V3 Expr) (V3 Expr :> Expr)
+local0 = Local (constD t) (constD (V3 x y z)) (constD (V3 x' y' z'))
+
+local1 :: Local (V3 Expr :> V3 Expr) (V3 Expr :> Expr)
+local1 = Local (constD t) (idD (V3 x y z)) (constD (V3 x' y' z'))
+
+local2 :: Local (V3 Expr :> V3 Expr) (V3 Expr :> Expr)
+local2 = Local (constD t) (constD (V3 x y z)) (idD (V3 x' y' z'))
+
+lagrangian1 :: Local (V3 Expr :> V3 Expr) (V3 Expr :> Expr) -> V3 Expr :> Expr
+lagrangian1 = lFreeParticle (constD m)
+
+lagrangian2 :: Local (V3 Expr :> V3 Expr) (V3 Expr :> Expr) -> V3 Expr :> Expr
+lagrangian2 = lHarmonic (constD m) (constD k)
+
+test :: (Expr, V3 Expr)
+test = let r = lagrangian1 local2
+        in (value r, fromCoords (map (deriv r) enumerate))
