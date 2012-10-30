@@ -268,21 +268,51 @@ derivAtBasis f x = (value f'df, map (deriv f'df . basisValue) enumerate)
 
 
 
-local0 :: Local (V3 Expr :> V3 Expr)
-local0 = Local (constD t) (constD (V3 x y z)) (constD (V3 x' y' z'))
+--local0 :: Local (V3 Expr :> V3 Expr)
+--local0 = Local (constD t) (constD (V3 x y z)) (constD (V3 x' y' z'))
 
-local1 :: Local (V3 Expr :> V3 Expr)
+--local1 :: Local (V3 Expr :> V3 Expr)
+--local1 = Local (constD t) (idD (V3 x y z)) (constD (V3 x' y' z'))
+
+--local2 :: Local (V3 Expr :> V3 Expr)
+--local2 = Local (constD t) (constD (V3 x y z)) (idD (V3 x' y' z'))
+
+--local = Local
+
+--partial :: (HasBasis a) => Int -> Local a -> Local (a :> a)
+--partial 0 (Local t x v) = Local (idD t) (constD x) (constD v)
+--partial 1 (Local t x v) = Local (constD t) (idD x) (constD v)
+--partial 2 (Local t x v) = Local (constD t) (constD x) (idD v)
+
+--local1 = partial 1 (Local t x x')
+--local2 = partial 2 (Local t x x')
+
+
+
+
+--lHarmonic2 :: (InnerSpace v, Fractional (Scalar v)) => Scalar v -> Local v -> Scalar v
+--lHarmonic2 k local = (-0.5) * k * (dot q q)
+--    where q = position local
+
+
+
 local1 = Local (constD t) (idD (V3 x y z)) (constD (V3 x' y' z'))
-
-local2 :: Local (V3 Expr :> V3 Expr)
 local2 = Local (constD t) (constD (V3 x y z)) (idD (V3 x' y' z'))
 
 lagrangian1 :: Local (V3 Expr :> V3 Expr) -> V3 Expr :> Expr
+--lagrangian1 :: Local (Expr :> Expr) -> Expr :> Expr
 lagrangian1 = lFreeParticle (constD m)
 
 lagrangian2 :: Local (V3 Expr :> V3 Expr) -> V3 Expr :> Expr
+--lagrangian2 :: Local (Expr :> Expr) -> Expr :> Expr
 lagrangian2 = lHarmonic (constD m) (constD k)
 
+--lagrangian3 :: Local (V3 Expr :> V3 Expr) -> V3 Expr :> Expr
+--lagrangian3 :: Local (Expr :> Expr) -> Expr :> Expr
+--lagrangian3 = lHarmonic2 (constD k)
+
 test :: (Expr, V3 Expr)
-test = let r = lagrangian1 local2
-        in (value r, fromCoords (map (deriv r) enumerate))
+--test :: (Expr, Expr)
+test = let r = lagrangian2 local2
+           s = lagrangian2 local1
+        in (value r, fromCoords (map (deriv (r-s) . basisValue) enumerate))
