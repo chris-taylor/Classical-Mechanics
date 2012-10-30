@@ -7,7 +7,8 @@ import Iso
 infixl 6 <+>
 infixl 6 <->
 
--- |Additive group @v@.
+-- |Additive group @v@. Minimal complete definition is 'zeroV', '(<+>)' and one of '(<->)' or
+--'negateV'.
 class AdditiveGroup v where
 
     -- | The zero element: identity for '<+>'
