@@ -1,22 +1,22 @@
 {-# LANGUAGE OverloadedStrings, TypeFamilies, TypeOperators,
              FlexibleContexts, UndecidableInstances, StandaloneDeriving #-}
 
-module ClassicalMechanics where
+module HCMUtils.ClassicalMechanics where
 
 import Control.Applicative hiding ((*>), (<*))
 import Prelude hiding (Real)
 
-import Expr
-import AD2
-import Differentiation
-import Integration
-import Optimization
+import HCMUtils.Expr
+import HCMUtils.AD2
+import HCMUtils.Differentiation
+import HCMUtils.Integration
+import HCMUtils.Optimization
 
-import Basis
-import VectorSpace
-import InnerSpace
-import Vector2
-import Vector3
+import HCMUtils.Basis
+import HCMUtils.VectorSpace
+import HCMUtils.InnerSpace
+import HCMUtils.Vector2
+import HCMUtils.Vector3
 
 ------------------------------
 -- Atomic variables

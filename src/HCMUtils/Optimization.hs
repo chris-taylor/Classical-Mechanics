@@ -1,4 +1,4 @@
-module Optimization ( minimize, multidimensionalMinimize ) where
+module HCMUtils.Optimization ( minimize, multidimensionalMinimize ) where
 
 import           Numeric.LinearAlgebra
 import qualified Numeric.GSL.Minimization as GSL

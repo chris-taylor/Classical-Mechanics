@@ -1,12 +1,12 @@
 {-# LANGUAGE TypeFamilies, FlexibleContexts, UndecidableInstances #-}
 
-module Vector2 ( V2(..) ) where
+module HCMUtils.Vector2 ( V2(..) ) where
 
 import Control.Applicative hiding ((*>))
 
-import Basis
-import VectorSpace
-import InnerSpace
+import HCMUtils.Basis
+import HCMUtils.VectorSpace
+import HCMUtils.InnerSpace
 
 data V2 a = V2 !a !a deriving (Eq,Ord)
 

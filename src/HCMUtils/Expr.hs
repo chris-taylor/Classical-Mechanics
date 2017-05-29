@@ -1,16 +1,16 @@
 {-# LANGUAGE OverloadedStrings, TypeFamilies #-}
 
-module Expr ( Real, Var, Expr, literalFunction, varE, constE ) where
+module HCMUtils.Expr ( Real, Var, Expr, literalFunction, varE, constE ) where
 
 import           GHC.Exts (IsString (..))
 import           Prelude hiding (Real)
 import qualified Data.Map  as Map
 import qualified Data.List as List
 
-import           Basis
-import           VectorSpace
-import           InnerSpace
-import           Differentiation
+import           HCMUtils.Basis
+import           HCMUtils.VectorSpace
+import           HCMUtils.InnerSpace
+import           HCMUtils.Differentiation
 
 type Real = Double
 type Var  = String

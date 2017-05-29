@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeOperators, TypeFamilies, FlexibleContexts, UndecidableInstances #-}
 
-module AD2 where
+module HCMUtils.AD2 where
 
 import Control.Applicative hiding ((*>), (<*))
 import LinearMap

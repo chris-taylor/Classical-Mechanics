@@ -1,8 +1,8 @@
 {-# LANGUAGE TypeFamilies, FlexibleContexts #-}
 
-module InnerSpace ( InnerSpace(..), (<.>), magnitudeSq, magnitude, normalized ) where
+module HCMUtils.InnerSpace ( InnerSpace(..), (<.>), magnitudeSq, magnitude, normalized ) where
 
-import VectorSpace
+import HCMUtils.VectorSpace
 
 -- |This class describes spaces with an inner product.
 class (VectorSpace v) => InnerSpace v where

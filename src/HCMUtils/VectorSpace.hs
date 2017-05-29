@@ -1,13 +1,13 @@
 {-# LANGUAGE TypeFamilies, FlexibleContexts #-}
 
-module VectorSpace
+module HCMUtils.VectorSpace
     ( module AdditiveGroup
     , VectorSpace(..)
     , (</)
     , lerp
     , linearCombo ) where
 
-import AdditiveGroup
+import HCMUtils.AdditiveGroup
 
 infixl 7 *>
 infixr 7 </

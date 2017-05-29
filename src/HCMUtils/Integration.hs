@@ -1,4 +1,4 @@
-module Integration ( definiteIntegral ) where
+module HCMUtils.Integration ( definiteIntegral ) where
 
 import qualified Data.List as L
 import qualified Numeric.GSL.Integration as GSL

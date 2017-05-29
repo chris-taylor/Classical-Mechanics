@@ -1,8 +1,8 @@
-module AdditiveGroup ( AdditiveGroup(..), Sum(..), sumV ) where
+module HCMUtils.AdditiveGroup ( AdditiveGroup(..), Sum(..), sumV ) where
 
 import Control.Applicative
 import Data.Monoid ( Monoid(..) )
-import Iso
+import HCMUtils.Iso
 
 infixl 6 <+>
 infixl 6 <->
