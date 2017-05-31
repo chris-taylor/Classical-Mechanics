@@ -3,10 +3,10 @@ version:             0.1.0.0
 -- synopsis:
 -- description:
 homepage:            https://github.com/githubuser/Classical-Mechanics#readme
-author:              Author name here
+author:              Chris Taylor
 maintainer:          example@example.com
 copyright:           2017 Author name here
-category:            Web
+category:            Math
 build-type:          Simple
 extra-source-files:  README.md
 cabal-version:       >=1.10
