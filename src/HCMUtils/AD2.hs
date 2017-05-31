@@ -2,10 +2,11 @@
 
 module HCMUtils.AD2 where
 
+import Prelude hiding ((*>))
 import Control.Applicative hiding ((*>), (<*))
-import LinearMap
-import VectorSpace
-import InnerSpace
+import HCMUtils.LinearMap
+import HCMUtils.VectorSpace
+import HCMUtils.InnerSpace
 
 ------------------------------
 -- Numeric Functions

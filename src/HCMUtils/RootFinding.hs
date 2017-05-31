@@ -21,7 +21,13 @@ instance Monad Root where
     SearchFailed >>= _ = SearchFailed
     Root a       >>= f = f a
 
--- TODO: Applicative instance
+instance Applicative Root where
+    pure = Root
+    (<*>) = liftM2 id
+
+liftM2  :: (Monad m) => (a1 -> a2 -> r) -> m a1 -> m a2 -> m r
+liftM2 f m1 m2          = do { x1 <- m1; x2 <- m2; return (f x1 x2) }
+
 
 bisectionMethod :: (Fractional a, Ord a, Show a) => a -> (a -> a) -> a -> a -> Root a
 bisectionMethod tol f a b

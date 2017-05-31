@@ -11,6 +11,7 @@ module HCMUtils.Basis
     , Enumerable(..)
     ) where
 
+import Prelude hiding ((*>))
 import HCMUtils.Trio
 import HCMUtils.Enumerable
 import HCMUtils.VectorSpace

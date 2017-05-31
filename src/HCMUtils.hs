@@ -1,6 +1,6 @@
 module HCMUtils
     ( module AD,
-      module AD2,
+      -- module AD2, -- "diff" name conflict
       module AdditiveGroup,
       module Basis,
       module ClassicalMechanics,
@@ -22,6 +22,7 @@ module HCMUtils
 
 import HCMUtils.AD as AD
 import HCMUtils.AD2 as AD2
+import HCMUtils.AdditiveGroup as AdditiveGroup
 import HCMUtils.Basis as Basis
 import HCMUtils.ClassicalMechanics as ClassicalMechanics
 import HCMUtils.Differentiation as Differentiation
@@ -37,4 +38,4 @@ import HCMUtils.RootFinding as RootFinding
 import HCMUtils.Trio as Trio
 import HCMUtils.Vector2 as Vector2
 import HCMUtils.Vector3 as Vector3
-import HCMUtils.VectorSpac as VectorSpac
+import HCMUtils.VectorSpace as VectorSpace

@@ -15,6 +15,7 @@ module HCMUtils.LinearMap
     , VectorSpace (..)
     ) where
 
+import Prelude hiding ((*>))
 import Control.Applicative hiding ((*>), (<*))
 
 import HCMUtils.Iso

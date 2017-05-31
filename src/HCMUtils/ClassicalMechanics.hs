@@ -3,8 +3,8 @@
 
 module HCMUtils.ClassicalMechanics where
 
+import Prelude hiding ((*>), Real)
 import Control.Applicative hiding ((*>), (<*))
-import Prelude hiding (Real)
 
 import HCMUtils.Expr
 import HCMUtils.AD2

@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings, TypeFamilies #-}
 
-module HCMUtils.Expr ( Real, Var, Expr, literalFunction, varE, constE ) where
+module HCMUtils.Expr ( Real, Var, Expr (..), Atom (..), Prod (..), literalFunction, varE, constE, isConstP ) where
 
 import           GHC.Exts (IsString (..))
 import           Prelude hiding (Real)
