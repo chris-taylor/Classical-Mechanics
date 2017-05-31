@@ -1,6 +1,6 @@
 module HCMUtils
     ( module AD,
-      -- module AD2, -- "diff" name conflict
+      module AD2,
       module AdditiveGroup,
       module Basis,
       module ClassicalMechanics,

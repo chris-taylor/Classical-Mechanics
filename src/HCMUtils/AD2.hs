@@ -136,9 +136,9 @@ deriv = lapply . derivative
 deriv' :: (HasBasis u, Scalar u ~ Scalar v, VectorSpace v) => (u :> v) -> u -> (v, v)
 deriv' d x = (value d, deriv d x)
 
-diff f x y = deriv (f (idD x)) y
+diffAD2 f x y = deriv (f (idD x)) y
 
-diff' f x y = deriv' (f (idD x)) y
+diffAD2' f x y = deriv' (f (idD x)) y
 
 
 
