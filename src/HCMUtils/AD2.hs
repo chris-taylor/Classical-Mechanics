@@ -64,7 +64,6 @@ type a :~> b = a -> (a :> b)
 -- AD Functions
 ------------------------------
 
-
 showsD :: Show b => (a :> b) -> ShowS
 showsD (D val _) = showString "D " . shows val . showString " ..."
 
@@ -74,8 +73,6 @@ constD b = D b zeroV
 --constD :: b -> a :> b
 --constD :: (HasBasis a, VectorSpace (a :> b),
 --           Scalar a ~ Scalar (a :> b)) => b -> a :> b
-
-
 
 -- |Given a *linear* function, create a differentiable function from it. The derivative is simply
 --the original function, converted to a linear map.
@@ -89,8 +86,6 @@ linearD f = \u -> D (f u) d
 --linearD f = \u -> D (f u) d
 --    where
 --        d = linear (constD . f)
-
-
 
 -- |A differentiable identity function, e.g.
 --
@@ -141,18 +136,11 @@ diffAD2 f x y = deriv (f (idD x)) y
 diffAD2' f x y = deriv' (f (idD x)) y
 
 
-
-
-
 ---------- Utility functions
 
 -- Useful for unimplement(ed/able) functionality (eg in Eq class)
 noOp :: String -> a
 noOp op = error (op ++ " not defined on a :> b")
-
-
-
-
 
 
 ---------- Instances

@@ -247,7 +247,6 @@ delta eta f q t = ( (f (q <+> eps *> eta) <-> f q ) </ eps) t
 
 --------------- playground
 
-
 f :: InnerSpace v => v -> Scalar v
 f v = dot v v
 
@@ -261,12 +260,6 @@ derivAtBasis :: (HasBasis a, HasBasis b, VectorSpace c, Scalar b ~ Scalar c) => 
 derivAtBasis f x = (value f'df, map (deriv f'df . basisValue) enumerate)
     where
         f'df = f (idD x)
-
-
-
-
-
-
 
 --local0 :: Local (V3 Expr :> V3 Expr)
 --local0 = Local (constD t) (constD (V3 x y z)) (constD (V3 x' y' z'))
@@ -287,14 +280,9 @@ derivAtBasis f x = (value f'df, map (deriv f'df . basisValue) enumerate)
 --local1 = partial 1 (Local t x x')
 --local2 = partial 2 (Local t x x')
 
-
-
-
 --lHarmonic2 :: (InnerSpace v, Fractional (Scalar v)) => Scalar v -> Local v -> Scalar v
 --lHarmonic2 k local = (-0.5) * k * (dot q q)
 --    where q = position local
-
-
 
 local1 = Local (constD t) (idD (V3 x y z)) (constD (V3 x' y' z'))
 local2 = Local (constD t) (constD (V3 x y z)) (idD (V3 x' y' z'))
