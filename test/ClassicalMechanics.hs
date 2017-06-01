@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings, TypeFamilies, TypeOperators,
              FlexibleContexts, UndecidableInstances, StandaloneDeriving #-}
 
-module HCMUtils.ClassicalMechanics where
+module Main where
 
 import Prelude hiding ((*>), Real)
 import Control.Applicative hiding ((*>), (<*))
@@ -304,3 +304,9 @@ test :: (Expr, V3 Expr)
 test = let r = lagrangian2 local2
            s = lagrangian2 local1
         in (value r, fromCoords (map (deriv (r-s) . basisValue) enumerate))
+
+main = do
+  let (result, v3result) = test
+  print result
+  print v3result
+  putStrLn "Tests complete."

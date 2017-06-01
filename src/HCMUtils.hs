@@ -3,7 +3,6 @@ module HCMUtils
       module AD2,
       module AdditiveGroup,
       module Basis,
-      module ClassicalMechanics,
       module Differentiation,
       module Enumerable,
       module Expr,
@@ -24,7 +23,6 @@ import HCMUtils.AD as AD
 import HCMUtils.AD2 as AD2
 import HCMUtils.AdditiveGroup as AdditiveGroup
 import HCMUtils.Basis as Basis
-import HCMUtils.ClassicalMechanics as ClassicalMechanics
 import HCMUtils.Differentiation as Differentiation
 import HCMUtils.Enumerable as Enumerable
 import HCMUtils.Expr as Expr
