@@ -1,4 +1,4 @@
-name:                Classical-Mechanics
+name:                HCMTools
 version:             0.1.0.0
 -- synopsis:
 -- description:
@@ -43,7 +43,7 @@ test-suite test
   hs-source-dirs:      test
   main-is:             ClassicalMechanics.hs
   build-depends:       base >= 4.7 && < 5
-                     , Classical-Mechanics >= 0.1.0.0 && < 0.2.0.0
+                     , HCMTools >= 0.1.0.0 && < 0.2.0.0
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
 
