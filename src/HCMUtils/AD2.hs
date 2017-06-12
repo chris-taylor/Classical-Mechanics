@@ -1,11 +1,12 @@
 {-# LANGUAGE TypeOperators, TypeFamilies, FlexibleContexts, UndecidableInstances #-}
 
-module AD2 where
+module HCMUtils.AD2 where
 
+import Prelude hiding ((*>))
 import Control.Applicative hiding ((*>), (<*))
-import LinearMap
-import VectorSpace
-import InnerSpace
+import HCMUtils.LinearMap
+import HCMUtils.VectorSpace
+import HCMUtils.InnerSpace
 
 ------------------------------
 -- Numeric Functions
@@ -63,7 +64,6 @@ type a :~> b = a -> (a :> b)
 -- AD Functions
 ------------------------------
 
-
 showsD :: Show b => (a :> b) -> ShowS
 showsD (D val _) = showString "D " . shows val . showString " ..."
 
@@ -73,8 +73,6 @@ constD b = D b zeroV
 --constD :: b -> a :> b
 --constD :: (HasBasis a, VectorSpace (a :> b),
 --           Scalar a ~ Scalar (a :> b)) => b -> a :> b
-
-
 
 -- |Given a *linear* function, create a differentiable function from it. The derivative is simply
 --the original function, converted to a linear map.
@@ -88,8 +86,6 @@ linearD f = \u -> D (f u) d
 --linearD f = \u -> D (f u) d
 --    where
 --        d = linear (constD . f)
-
-
 
 -- |A differentiable identity function, e.g.
 --
@@ -135,12 +131,9 @@ deriv = lapply . derivative
 deriv' :: (HasBasis u, Scalar u ~ Scalar v, VectorSpace v) => (u :> v) -> u -> (v, v)
 deriv' d x = (value d, deriv d x)
 
-diff f x y = deriv (f (idD x)) y
+diffAD2 f x y = deriv (f (idD x)) y
 
-diff' f x y = deriv' (f (idD x)) y
-
-
-
+diffAD2' f x y = deriv' (f (idD x)) y
 
 
 ---------- Utility functions
@@ -148,10 +141,6 @@ diff' f x y = deriv' (f (idD x)) y
 -- Useful for unimplement(ed/able) functionality (eg in Eq class)
 noOp :: String -> a
 noOp op = error (op ++ " not defined on a :> b")
-
-
-
-
 
 
 ---------- Instances

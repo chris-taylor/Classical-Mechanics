@@ -1,8 +1,8 @@
-module AdditiveGroup ( AdditiveGroup(..), Sum(..), sumV ) where
+module HCMUtils.AdditiveGroup ( AdditiveGroup(..), Sum(..), sumV ) where
 
 import Control.Applicative
 import Data.Monoid ( Monoid(..) )
-import Iso
+import HCMUtils.Iso
 
 infixl 6 <+>
 infixl 6 <->
@@ -30,7 +30,7 @@ sumV :: AdditiveGroup a => [a] -> a
 sumV = go zeroV
     where
         go accum []     = accum
-        go accum (v:vs) = go (accum <+> v) vs 
+        go accum (v:vs) = go (accum <+> v) vs
 
 -- Numeric instances
 
@@ -78,7 +78,7 @@ instance (AdditiveGroup g, AdditiveGroup h, AdditiveGroup i) => AdditiveGroup (g
     (a,b,c) <+> (d,e,f) = (a <+> d, b <+> e, c <+> f)
     (a,b,c) <-> (d,e,f) = (a <-> d, b <-> e, c <-> f)
 
--- Sum type 
+-- Sum type
 
 -- |Sum data type. An alternative to the one in Data.Monoid that uses a @Num@
 --instance instead of an AdditiveGroup instance.

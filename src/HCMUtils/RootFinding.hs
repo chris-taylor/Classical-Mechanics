@@ -1,6 +1,6 @@
 {-# LANGUAGE BangPatterns #-}
 
-module RootFinding ( Root(..), bisectionMethod ) where
+module HCMUtils.RootFinding ( Root(..), bisectionMethod ) where
 
 import Debug.Trace
 
@@ -20,6 +20,14 @@ instance Monad Root where
     NotBracketed >>= _ = NotBracketed
     SearchFailed >>= _ = SearchFailed
     Root a       >>= f = f a
+
+instance Applicative Root where
+    pure = Root
+    (<*>) = liftM2 id
+
+liftM2  :: (Monad m) => (a1 -> a2 -> r) -> m a1 -> m a2 -> m r
+liftM2 f m1 m2          = do { x1 <- m1; x2 <- m2; return (f x1 x2) }
+
 
 bisectionMethod :: (Fractional a, Ord a, Show a) => a -> (a -> a) -> a -> a -> Root a
 bisectionMethod tol f a b

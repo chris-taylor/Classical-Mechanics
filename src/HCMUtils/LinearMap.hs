@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeOperators, TypeFamilies #-}
 
-module LinearMap
+module HCMUtils.LinearMap
     ( (:->)
     , linear
     , lapply
@@ -15,11 +15,12 @@ module LinearMap
     , VectorSpace (..)
     ) where
 
+import Prelude hiding ((*>))
 import Control.Applicative hiding ((*>), (<*))
 
-import Iso
-import Basis
-import VectorSpace
+import HCMUtils.Iso
+import HCMUtils.Basis
+import HCMUtils.VectorSpace
 
 type MSum a = Maybe (Sum a)
 

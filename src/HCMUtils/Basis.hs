@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeFamilies, FlexibleContexts #-}
 
-module Basis
+module HCMUtils.Basis
     ( decompose'
     , recompose'
     , recompose
@@ -11,9 +11,10 @@ module Basis
     , Enumerable(..)
     ) where
 
-import Trio
-import Enumerable
-import VectorSpace
+import Prelude hiding ((*>))
+import HCMUtils.Trio
+import HCMUtils.Enumerable
+import HCMUtils.VectorSpace
 
 class (VectorSpace v, Enumerable (Basis v)) => HasBasis v where
     type Basis v

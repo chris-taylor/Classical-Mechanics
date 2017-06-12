@@ -1,13 +1,15 @@
 {-# LANGUAGE TypeFamilies, FlexibleContexts #-}
 
-module VectorSpace
+module HCMUtils.VectorSpace
     ( module AdditiveGroup
     , VectorSpace(..)
     , (</)
     , lerp
     , linearCombo ) where
 
-import AdditiveGroup
+import Prelude hiding ((*>))
+import qualified Prelude as P
+import HCMUtils.AdditiveGroup as AdditiveGroup
 
 infixl 7 *>
 infixr 7 </
@@ -22,7 +24,7 @@ class AdditiveGroup v => VectorSpace v where
     type Scalar v
 
     -- | Multiplication by a scalar on the left.
-    (*>)  :: Scalar v -> v -> v 
+    (*>)  :: Scalar v -> v -> v
 
 -- |Division by a scalar.
 (</) :: (VectorSpace v, s ~ Scalar v, Fractional s) => v -> s -> v
@@ -71,5 +73,3 @@ instance (VectorSpace u, VectorSpace v, VectorSpace w, Scalar u ~ Scalar v, Scal
     type Scalar (u,v,w) = Scalar u
 
     s *> (u,v,w) = (s *> u, s *> v, s *> w)
-
-

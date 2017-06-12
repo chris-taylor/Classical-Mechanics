@@ -1,4 +1,4 @@
-module Iso where
+module HCMUtils.Iso where
 
 -- |Given isomorphisms @i@ and @o@, lift the function @f@ to work with the
 --isomorphism.

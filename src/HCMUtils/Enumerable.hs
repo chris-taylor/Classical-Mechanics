@@ -1,6 +1,6 @@
-module Enumerable where
+module HCMUtils.Enumerable where
 
-import Trio
+import HCMUtils.Trio
 
 class Enumerable a where
     enumerate :: [a]

@@ -1,22 +1,22 @@
 {-# LANGUAGE OverloadedStrings, TypeFamilies, TypeOperators,
              FlexibleContexts, UndecidableInstances, StandaloneDeriving #-}
 
-module ClassicalMechanics where
+module Main where
 
+import Prelude hiding ((*>), Real)
 import Control.Applicative hiding ((*>), (<*))
-import Prelude hiding (Real)
 
-import Expr
-import AD2
-import Differentiation
-import Integration
-import Optimization
+import HCMUtils.Expr
+import HCMUtils.AD2
+import HCMUtils.Differentiation
+import HCMUtils.Integration
+import HCMUtils.Optimization
 
-import Basis
-import VectorSpace
-import InnerSpace
-import Vector2
-import Vector3
+import HCMUtils.Basis
+import HCMUtils.VectorSpace
+import HCMUtils.InnerSpace
+import HCMUtils.Vector2
+import HCMUtils.Vector3
 
 ------------------------------
 -- Atomic variables
@@ -247,7 +247,6 @@ delta eta f q t = ( (f (q <+> eps *> eta) <-> f q ) </ eps) t
 
 --------------- playground
 
-
 f :: InnerSpace v => v -> Scalar v
 f v = dot v v
 
@@ -257,16 +256,11 @@ v1 = V3 x y z
 v2 :: V3 Double
 v2 = V3 1.0 2.0 3.0
 
-derivAtBasis :: (HasBasis a, HasBasis b, VectorSpace c, Scalar b ~ Scalar c) => ((a :> a) -> (b :> c)) -> a -> (c, [c])
+derivAtBasis :: (HasBasis a, HasBasis b, VectorSpace c, Scalar b ~ Scalar c) =>
+  ((a :> a) -> (b :> c)) -> a -> (c, [c])
 derivAtBasis f x = (value f'df, map (deriv f'df . basisValue) enumerate)
     where
         f'df = f (idD x)
-
-
-
-
-
-
 
 --local0 :: Local (V3 Expr :> V3 Expr)
 --local0 = Local (constD t) (constD (V3 x y z)) (constD (V3 x' y' z'))
@@ -287,14 +281,9 @@ derivAtBasis f x = (value f'df, map (deriv f'df . basisValue) enumerate)
 --local1 = partial 1 (Local t x x')
 --local2 = partial 2 (Local t x x')
 
-
-
-
 --lHarmonic2 :: (InnerSpace v, Fractional (Scalar v)) => Scalar v -> Local v -> Scalar v
 --lHarmonic2 k local = (-0.5) * k * (dot q q)
 --    where q = position local
-
-
 
 local1 = Local (constD t) (idD (V3 x y z)) (constD (V3 x' y' z'))
 local2 = Local (constD t) (constD (V3 x y z)) (idD (V3 x' y' z'))
@@ -316,3 +305,9 @@ test :: (Expr, V3 Expr)
 test = let r = lagrangian2 local2
            s = lagrangian2 local1
         in (value r, fromCoords (map (deriv (r-s) . basisValue) enumerate))
+
+main = do
+  let (result, v3result) = test
+  print result
+  print v3result
+  putStrLn "Tests complete."

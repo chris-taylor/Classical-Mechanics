@@ -1,9 +1,9 @@
 {-# LANGUAGE TypeFamilies #-}
 
-module Differentiation where
+module HCMUtils.Differentiation where
 
-import Basis
-import VectorSpace
+import HCMUtils.Basis
+import HCMUtils.VectorSpace
 
 -- |Class for differentiable types.
 class Differentiable a where

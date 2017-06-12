@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 
-module AD ( dConst, dVar, diff, diff', diffs ) where
+module HCMUtils.AD ( dConst, dVar, diff, diff', diffs ) where
 
 import Control.Applicative
 

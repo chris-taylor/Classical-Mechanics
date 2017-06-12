@@ -1,4 +1,4 @@
-module Trio where
+module HCMUtils.Trio where
 
 data Trio u v w = First u | Second v | Third w deriving (Eq,Ord,Show)
 

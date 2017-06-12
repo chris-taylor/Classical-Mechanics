@@ -1,0 +1,6 @@
+:set -XOverloadedStrings
+:set -XTypeFamilies
+:set -XTypeOperators
+:set -XFlexibleContexts
+:set -XUndecideableInstances
+:set -XStanadaloneDeriving
