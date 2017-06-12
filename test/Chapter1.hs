@@ -1,4 +1,3 @@
-
 {-# LANGUAGE OverloadedStrings, TypeFamilies, TypeOperators,
              FlexibleContexts, UndecidableInstances, StandaloneDeriving #-}
 {-
@@ -27,19 +26,27 @@ import HCMUtils.Vector3
 up :: (Functor f) => f (a -> b) -> a -> f b
 up fs t = fmap ($t) fs
 
-upTest = up [\x -> 2 * x, \y-> 3 * y]
-upDemo = upTest 5
+-- up is used differently than in the book, it is only needed for deferred
+-- evaluation rather than as a generic tuple constructor
+upVal = up $ V2 (\x -> 2 * x) (\y-> 3 * y)
+upApply1 = upVal 5
+-- above is equivalent to
+upApply2 val = fmap (\x -> x $ val) (V2 (\x -> 2 * x) (\y-> 3 * y))
 
 lFreeParticle :: (InnerSpace v, Fractional (Scalar v))
   => Scalar v -> Local v -> Scalar v
 lFreeParticle mass local = 0.5 * mass * (dot v v)
     where v = velocity local
 
--- |3D Coordinate
+-- | A generalized coordinates is a tuple of functions
+-- | that can be applied to a value. As noted above, "up"
+-- | reads as "wait to be applied to a value"
 q :: Expr -> V3 Expr
 q = up $ V3 (literalFunction "x")
             (literalFunction "y")
             (literalFunction "z")
+
+testQ = print (q 4)
 
 -- Takes function of time as input, returns local tuple
 gamma :: (HasBasis v, Differentiable (Scalar v))
@@ -59,6 +66,10 @@ velocity (Local _ _ vel) = vel
 --   print $ (d q) t
 --   print $ (d q) t
 --   -- print $ (gamma q)
+
+
+-- definiteIntegral
+--   :: (Double -> Double) -> Double -> Double -> Double
 
 lagrangianAction :: (HasBasis v, Scalar v ~ Real) =>
                     (Local v -> Real)       -- lagrangian
