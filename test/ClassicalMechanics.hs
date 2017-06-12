@@ -256,7 +256,8 @@ v1 = V3 x y z
 v2 :: V3 Double
 v2 = V3 1.0 2.0 3.0
 
-derivAtBasis :: (HasBasis a, HasBasis b, VectorSpace c, Scalar b ~ Scalar c) => ((a :> a) -> (b :> c)) -> a -> (c, [c])
+derivAtBasis :: (HasBasis a, HasBasis b, VectorSpace c, Scalar b ~ Scalar c) =>
+  ((a :> a) -> (b :> c)) -> a -> (c, [c])
 derivAtBasis f x = (value f'df, map (deriv f'df . basisValue) enumerate)
     where
         f'df = f (idD x)
